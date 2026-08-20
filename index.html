@@ -122,6 +122,7 @@ select:focus-visible{outline:2px solid var(--brass)}
 .cols{display:grid;grid-template-columns:1fr 1.4fr;gap:36px}
 @media(max-width:680px){.cols{grid-template-columns:1fr}}
 .modal h4{font-family:var(--mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--brass);margin-bottom:14px}
+.ing-list li.ing-gruppe{border-bottom:none;padding:14px 0 2px;font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
 .ing-list li{list-style:none;padding:7px 0;border-bottom:1px solid var(--line);font-size:15px;display:flex;gap:10px}
 .ing-list .amt{font-family:var(--mono);font-size:12px;color:var(--brass-bright);min-width:74px;padding-top:2px}
 .step-list{counter-reset:trin}
@@ -399,6 +400,235 @@ const RECIPES = [
     "Servér hakkebøffen med pomfritter og grønne ærter. Smag til med salt, peber og andre krydderier."
   ],
   tip:null
+},
+{
+  id:"hawaiipizza",
+  titel:"Light Hawaiipizza",
+  intro:"Pizzaen, som deler vandene. Skal der ananas p\u00e5 eller ej? Det synes vi, der skal \u2014 og denne pizza spiser vi selv mindst en gang om ugen.",
+  min:20, pers:2, kcal:360,
+  img:"billeder/hawaiipizza.jpg",
+  ingredienser:[
+    {navn:"pastasauce", maengde:"100 g", sektion:"Kolonial"},
+    {navn:"Premieur surdejspizzabund (200 g)", maengde:"1 stk.", sektion:"Frost"},
+    {navn:"skinke i skiver", maengde:"75 g", sektion:"K\u00f8d & p\u00e5l\u00e6g"},
+    {navn:"ananas i tern p\u00e5 d\u00e5se", maengde:"100 g", sektion:"Kolonial"},
+    {navn:"Cheasy-mozzarella 13 %", maengde:"75 g", sektion:"Ost"},
+    {navn:"oregano", maengde:"", sektion:"Krydderier & sauce"}
+  ],
+  trin:[
+    "P\u00e5f\u00f8r pastasaucen p\u00e5 pizzabunden.",
+    "Sk\u00e6r skinken i tynde strimler, og fordel den j\u00e6vnt p\u00e5 pizzaen.",
+    "Tilf\u00f8j ananas. Eller udelad det, hvis du ikke \u00f8nsker ananas p\u00e5 din pizza.",
+    "Fordel mozzarellaosten p\u00e5 pizzaen, og krydr med oregano.",
+    "Bages i ovnen i 15-20 minutter ved 180 grader."
+  ],
+  tip:"Skal det v\u00e6re ekstra billigt, kan du skifte surdejspizzabunden ud med f\u00e6rdig pizzadej."
+},
+{
+  id:"kyllingedeller",
+  titel:"Kyllingedeller med sweet fries",
+  intro:"Vores kyllingefrikadeller er et l\u00e6kkert kalorielet alternativ til den almindelige frikadelle. Smagen fra r\u00f8d peber og l\u00f8g s\u00e6tter prikken over i'et.",
+  min:30, pers:1, kcal:450,
+  img:"billeder/kyllingedeller.jpg",
+  ingredienser:[
+    {gruppe:"Frikadeller", navn:"r\u00f8d peberfrugt", maengde:"", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"r\u00f8dl\u00f8g", maengde:"", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"hakket kylling 3-6 %", maengde:"125 g", sektion:"K\u00f8d & p\u00e5l\u00e6g"},
+    {navn:"\u00e6g", maengde:"1 stk.", sektion:"Mejeri & \u00e6g"},
+    {navn:"skummetm\u00e6lk", maengde:"30 ml", sektion:"Mejeri & \u00e6g"},
+    {navn:"oregano", maengde:"1 tsk", sektion:"Krydderier & sauce"},
+    {navn:"citronsaft", maengde:"\u00bd tsk", sektion:"Krydderier & sauce"},
+    {gruppe:"Sweet fries", navn:"sweet potato fries, frost", maengde:"150 g", sektion:"Frost"},
+    {gruppe:"Salat", navn:"salat", maengde:"5 blade", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"tomat", maengde:"1 stk.", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"r\u00f8dl\u00f8g", maengde:"\u00bc stk.", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"agurk", maengde:"20 g", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"feta", maengde:"3 tern", sektion:"Ost"}
+  ],
+  trin:[
+    "Forvarm ovnen til 200 grader.",
+    "Start med at lave frikadellerne. Skyl r\u00f8d peberfrugt og r\u00f8dl\u00f8g, og hak det fint. H\u00e6ld det i en sk\u00e5l, og r\u00f8r det sammen med hakket kyllingek\u00f8d, \u00e6g, m\u00e6lk, oregano og citronsaft.",
+    "Form farsen som frikadeller, og l\u00e6g dem p\u00e5 en bradepande.",
+    "Tilf\u00f8j sweet potato fries til bradepanden, og bag det hele ca. 25 minutter i ovnen.",
+    "Lav nu salaten: Skyl og snit salat, tomat, r\u00f8dl\u00f8g og agurk.",
+    "N\u00e5r kyllingefrikadellerne og fritterne er f\u00e6rdige, anrettes de med salaten p\u00e5 en tallerken. Top salaten med feta."
+  ],
+  tip:null
+},
+{
+  id:"mexipasta",
+  titel:"Mexipasta",
+  intro:"Denne pastaret er cremet i konsistensen og meget m\u00e6ttende. En l\u00e6kker smagsoplevelse, der leder tankerne hen p\u00e5 Mexico.",
+  min:30, pers:5, kcal:440,
+  img:"billeder/mexipasta.jpg",
+  ingredienser:[
+    {navn:"frisk pasta", maengde:"300 g", sektion:"K\u00f8l & f\u00e6rdigretter"},
+    {navn:"BBQ-marineret kyllingebryst", maengde:"600 g", sektion:"K\u00f8d & p\u00e5l\u00e6g"},
+    {navn:"gulerod", maengde:"1 stk.", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"r\u00f8dl\u00f8g", maengde:"1 stk.", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"r\u00f8d peberfrugt", maengde:"1 stk.", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"Cheasy neutral skyr", maengde:"250 g", sektion:"Mejeri & \u00e6g"},
+    {navn:"tomatsauce", maengde:"250 g", sektion:"Kolonial"},
+    {navn:"Tex Mex-krydderi", maengde:"1 brev", sektion:"Krydderier & sauce"},
+    {navn:"parmesan", maengde:"100 g", sektion:"Ost"}
+  ],
+  trin:[
+    "Bring vand i kog i en gryde, tilf\u00f8j pastaen, og kog den efter anvisningen p\u00e5 pakken.",
+    "Sk\u00e6r kyllingebryst i skiver, og steg det i en actifryer i 12-15 minutter. Det kan ogs\u00e5 steges p\u00e5 panden, hvis du ikke har en actifryer.",
+    "Skyl og hak gr\u00f8ntsagerne, og steg dem efterf\u00f8lgende p\u00e5 panden.",
+    "Bland neutral skyr, tomatsauce og Tex Mex-krydderi i en sk\u00e5l.",
+    "N\u00e5r gr\u00f8ntsagerne er stegt, tilf\u00f8jes den blandede sauce til panden, og det steges sammen.",
+    "N\u00e5r kyllingen er f\u00e6rdig, tilf\u00f8jes den til panden med gr\u00f8ntsagerne og mexisaucen, og det vendes sammen.",
+    "H\u00e6ld vandet fra pastaen, anret den med mexikyllingen, og top med parmesan."
+  ],
+  tip:"\u00d8nsker du ekstra mexicanervibes, kan du tilf\u00f8je tajinkrydderi til din kylling."
+},
+{
+  id:"macncheese",
+  titel:"Mac'n'cheese",
+  intro:"En ret med r\u00f8dder i USA, som enhver b\u00f8rnefamilie ogs\u00e5 elsker her i Danmark. Cremet i konsistensen og med masser af volumen fra osten.",
+  min:25, pers:5, kcal:450,
+  img:"billeder/macncheese.jpg",
+  ingredienser:[
+    {navn:"fedtreducerede grillp\u00f8lser", maengde:"150 g", sektion:"K\u00f8d & p\u00e5l\u00e6g"},
+    {navn:"kylling", maengde:"200 g", sektion:"K\u00f8d & p\u00e5l\u00e6g"},
+    {navn:"makaroni", maengde:"250 g", sektion:"Kolonial"},
+    {navn:"minitomater", maengde:"150 g", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"K\u00e6rg\u00e5rden Let", maengde:"20 g", sektion:"Mejeri & \u00e6g"},
+    {navn:"hvedemel", maengde:"20 g", sektion:"Kolonial"},
+    {navn:"skummetm\u00e6lk", maengde:"4 dl", sektion:"Mejeri & \u00e6g"},
+    {navn:"revet mozzarella 13 %", maengde:"125 g", sektion:"Ost"},
+    {navn:"cheddar", maengde:"75 g", sektion:"Ost"},
+    {navn:"salt og peber", maengde:"", sektion:"Krydderier & sauce"}
+  ],
+  trin:[
+    "Forvarm ovnen til 200 grader varmluft.",
+    "Hak p\u00f8lserne, og sk\u00e6r kyllingen i tern.",
+    "Steg kyllingen og p\u00f8lserne p\u00e5 panden, s\u00e5 de bliver spr\u00f8de.",
+    "Kog makaronien i letsaltet vand som anvist p\u00e5 pakken. Lad den ikke overkoge, da den ogs\u00e5 skal i ovnen.",
+    "Sk\u00e6r minitomaterne i halve.",
+    "H\u00e6ld vandet fra makaronien, og tils\u00e6t minitomaterne.",
+    "Smelt sm\u00f8rret i den tomme makaronigryde, og pisk derefter hvedemelet i massen.",
+    "Pisk skummetm\u00e6lken gradvist i, indtil du har en sauce.",
+    "Tils\u00e6t din revne mozzarellaost til saucen, og r\u00f8r den til den l\u00e6kreste cremede cheesesauce. Smag til med dit yndlingskrydderi samt salt og peber. Du kan tils\u00e6tte lidt mere m\u00e6lk, hvis konsistensen er for klistret. Kog op, mens du r\u00f8rer rundt i et par minutter.",
+    "Kyllingen og p\u00f8lserne r\u00f8res sammen med saucen, hvorefter du tils\u00e6tter makaroni og tomater.",
+    "Alt h\u00e6ldes i et ildfast fad og toppes med revet cheddarost.",
+    "Retten bages i cirka 15-20 minutter i ovnen."
+  ],
+  tip:null
+},
+{
+  id:"boller-i-karry",
+  titel:"Boller i karry",
+  intro:"Vel nok en af de mest velkendte retter i de danske familier. Vi har lavet en kalorielet version til dig, s\u00e5 du i din livsstilsoml\u00e6gning med lavere kalorieindtag stadig kan spise med, n\u00e5r der serveres boller i karry.",
+  min:25, pers:6, kcal:300,
+  img:"billeder/boller-i-karry.jpg",
+  ingredienser:[
+    {gruppe:"Ris", navn:"ris", maengde:"185 g", sektion:"Kolonial"},
+    {gruppe:"K\u00f8dboller", navn:"hakket kalvek\u00f8d", maengde:"400 g", sektion:"K\u00f8d & p\u00e5l\u00e6g"},
+    {navn:"salt og peber", maengde:"", sektion:"Krydderier & sauce"},
+    {navn:"l\u00f8g", maengde:"1 stk.", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"\u00e6g", maengde:"1 stk.", sektion:"Mejeri & \u00e6g"},
+    {navn:"hvedemel", maengde:"25 g", sektion:"Kolonial"},
+    {navn:"skummetm\u00e6lk", maengde:"1 dl", sektion:"Mejeri & \u00e6g"},
+    {navn:"h\u00f8nsebouillon", maengde:"1 terning", sektion:"Kolonial"},
+    {gruppe:"Sovs", navn:"K\u00e6rg\u00e5rden Let", maengde:"50 g", sektion:"Mejeri & \u00e6g"},
+    {navn:"hvedemel", maengde:"25 g", sektion:"Kolonial"},
+    {navn:"karrypulver", maengde:"3 spsk", sektion:"Krydderier & sauce"},
+    {navn:"Cheasy neutral skyr", maengde:"150 g", sektion:"Mejeri & \u00e6g"},
+    {navn:"Sukrin", maengde:"5 g", sektion:"Kolonial"}
+  ],
+  trin:[
+    "Bring vand i kog i en gryde, tilf\u00f8j risene, og kog dem efter anvisningen p\u00e5 pakken.",
+    "G\u00e5 i gang med farsen til k\u00f8dbollerne. R\u00f8r f\u00f8rst k\u00f8det med salt og peber.",
+    "Skyl l\u00f8get, hak det fint, og tils\u00e6t k\u00f8det.",
+    "Tils\u00e6t \u00e6g, mel og m\u00e6lk, og r\u00f8r det sammen.",
+    "Kog vand op med h\u00f8nsebouillon.",
+    "Form farsen til boller p\u00e5 st\u00f8rrelse med en golfbold, og kog dem i 8-10 minutter.",
+    "Tag bollerne op, og gem 4 dl vand til sovsen.",
+    "Lav sovsen ved at smelte sm\u00f8rret i en gryde. Pisk hvedemel og karry i. (Karryen skal br\u00e6ndes af for at f\u00e5 en god smag.)",
+    "Tils\u00e6t vandet fra k\u00f8dbollerne, og pisk stille og roligt.",
+    "Tils\u00e6t neutral skyr efter behov, og r\u00f8r rundt, til sovsen har den \u00f8nskede konsistens.",
+    "Tilf\u00f8j k\u00f8dbollerne til karrysaucen, og r\u00f8r rundt i 1-2 minutter.",
+    "Anret risene p\u00e5 en tallerken, og top med karrysauce og k\u00f8dboller."
+  ],
+  tip:"Vil du give dine ris yderligere smag, kan du komme lime i risene, mens de koger. Retten bliver smukkere af at blive toppet med friskhakket persille inden servering."
+},
+{
+  id:"burger-sweet-fries",
+  titel:"Burger med sweet fries",
+  intro:"Do it the American way. En l\u00e6kker burger med fries on the side. I denne kalorielette version f\u00e5r du fornemmelsen af den gode junkfood \u2014 og du kan spise med god samvittighed.",
+  min:30, pers:1, kcal:500,
+  img:"billeder/burger-sweet-fries.jpg",
+  ingredienser:[
+    {navn:"sweet potato fries, frost", maengde:"80 g", sektion:"Frost"},
+    {navn:"kalkunbacon", maengde:"1 skive", sektion:"K\u00f8d & p\u00e5l\u00e6g"},
+    {navn:"hakket oksek\u00f8d 3-7 %", maengde:"120 g", sektion:"K\u00f8d & p\u00e5l\u00e6g"},
+    {navn:"icebergsalat", maengde:"50 g", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"agurk", maengde:"25 g", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"tomat", maengde:"1 stk.", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"l\u00f8g", maengde:"\u00bd stk.", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"burgerbolle", maengde:"1 stk.", sektion:"Br\u00f8d & bager"},
+    {navn:"ketchup", maengde:"2 tsk", sektion:"Krydderier & sauce"},
+    {navn:"burgerdressing", maengde:"1 tsk", sektion:"Krydderier & sauce"}
+  ],
+  trin:[
+    "Forvarm ovnen til 200 grader. Kom fritterne p\u00e5 en bageplade med bagepapir, og bag dem i cirka 30 minutter.",
+    "Varm en pande op til middelh\u00f8j varme, og steg baconen p\u00e5 begge sider, indtil den er gylden og spr\u00f8d.",
+    "Form k\u00f8det til en b\u00f8f, og steg den p\u00e5 panden i baconfedtet ved middelh\u00f8j varme, indtil den er gennemstegt, men ikke t\u00f8r.",
+    "Mens du steger k\u00f8det, kan du skylle og hakke salat, agurk, tomat, l\u00f8g eller andet gr\u00f8nt.",
+    "Lun burgerbollen. Du kan eventuelt stege burgerbollen p\u00e5 panden, efter b\u00f8ffen er stegt.",
+    "Anret burgeren med ketchup, dressing, b\u00f8f og bacon. Top til sidst med gr\u00f8nt.",
+    "Serv\u00e9r burgeren sammen med sweet potato fries."
+  ],
+  tip:null
+},
+{
+  id:"kebabdurum",
+  titel:"Kebabdurum",
+  intro:"Denne durumrulle smager som den, du f\u00e5r fra den lokale grillbar, men indeholder kun omkring en tredjedel af de kalorier, du ellers ville f\u00e5. Spis den med god samvittighed.",
+  min:20, pers:1, kcal:500,
+  img:"billeder/kebabdurum.jpg",
+  ingredienser:[
+    {navn:"oksekebab (Rema 1000)", maengde:"100 g", sektion:"K\u00f8d & p\u00e5l\u00e6g"},
+    {navn:"salt og peber", maengde:"", sektion:"Krydderier & sauce"},
+    {navn:"Gestus forbagt fladbr\u00f8d", maengde:"1 stk.", sektion:"Br\u00f8d & bager"},
+    {navn:"r\u00f8dl\u00f8g", maengde:"", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"icebergsalat", maengde:"50 g", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"tomat", maengde:"", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"B\u00e4hncke kebabdressing", maengde:"10 g", sektion:"Krydderier & sauce"},
+    {navn:"revet mozzarella 13 %", maengde:"20 g", sektion:"Ost"}
+  ],
+  trin:[
+    "Brun kebabben p\u00e5 en pande ved middelh\u00f8j varme, indtil den er gyldenbrun. Smag til med salt, peber og eventuelt andre krydderier.",
+    "Lun fladbr\u00f8det p\u00e5 panden, n\u00e5r kebabben er f\u00e6rdigstegt.",
+    "Skyl gr\u00f8ntsagerne, og hak dem fint. \u00d8nsker du andet gr\u00f8nt, kan du sagtens tilf\u00f8je det.",
+    "N\u00e5r fladbr\u00f8det er varmet, tilf\u00f8jes kebabdressing, kebab og gr\u00f8ntsager. Top til sidst med revet mozzarellaost."
+  ],
+  tip:null
+},
+{
+  id:"pitadrom",
+  titel:"Pitadr\u00f8m",
+  intro:"En ret, der kan spises med fingrene, og som er elsket af b\u00e5de b\u00f8rn og voksne.",
+  min:15, pers:1, kcal:500,
+  img:"billeder/pitadrom.jpg",
+  ingredienser:[
+    {navn:"oksekebab (Rema 1000)", maengde:"165 g", sektion:"K\u00f8d & p\u00e5l\u00e6g"},
+    {navn:"icebergsalat", maengde:"", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"r\u00f8dl\u00f8g", maengde:"", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"tomat", maengde:"", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"agurk", maengde:"", sektion:"Frugt & gr\u00f8nt"},
+    {navn:"stort pitabr\u00f8d", maengde:"1 stk.", sektion:"Br\u00f8d & bager"},
+    {navn:"fedtreduceret mayonnaise", maengde:"4 tsk", sektion:"Krydderier & sauce"}
+  ],
+  trin:[
+    "Steg kebabben p\u00e5 panden, eller varm den i ovnen.",
+    "Skyl og hak salat, r\u00f8dl\u00f8g, tomat og agurk. \u00d8nsker du andre gr\u00f8ntsager, kan du sagtens bruge dem i stedet.",
+    "Varm pitabr\u00f8det i ovnen eller p\u00e5 panden.",
+    "Anret pitabr\u00f8det med mayo, salat og kebab."
+  ],
+  tip:"Du kan bruge \u00bd avokado i stedet for mayonnaise."
 }
 ];
 
@@ -493,6 +723,12 @@ function updateStats(){
 }
 
 /* ============ modal ============ */
+function ingListHTML(r){
+  return r.ingredienser.map(i=>
+    (i.gruppe?'<li class="ing-gruppe">'+esc(i.gruppe)+'</li>':'')+
+    '<li><span class="amt">'+esc(i.maengde||"")+'</span><span>'+esc(i.navn)+'</span></li>'
+  ).join("");
+}
 function openModal(id){
   const r = byId(id); if(!r) return;
   const inB = basket.includes(r.id);
@@ -504,9 +740,7 @@ function openModal(id){
       (r.intro?'<p class="intro">'+esc(r.intro)+'</p>':'')+
       metaHTML(r)+
       '<div class="cols">'+
-        '<div><h4>Ingredienser</h4><ul class="ing-list">'+
-          r.ingredienser.map(i=>'<li><span class="amt">'+esc(i.maengde||"")+'</span><span>'+esc(i.navn)+'</span></li>').join("")+
-        '</ul></div>'+
+        '<div><h4>Ingredienser</h4><ul class="ing-list">'+ingListHTML(r)+'</ul></div>'+
         '<div><h4>Fremgangsmåde</h4><ol class="step-list">'+
           r.trin.map(t=>'<li>'+esc(t)+'</li>').join("")+
         '</ol>'+
