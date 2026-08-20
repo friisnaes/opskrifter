@@ -79,7 +79,7 @@ select:focus-visible{outline:2px solid var(--brass)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
   display:flex;flex-direction:column;transition:transform .25s,border-color .25s;position:relative}
-.card:hover{transform:translateY(-4px);border-color:rgba(200,164,93,.5)}
+.card:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(0,0,0,.45)}
 .card-img{aspect-ratio:1/1;width:100%;object-fit:cover;display:block;cursor:pointer;background:var(--panel-2)}
 .card-img.noimg{display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-size:64px;color:var(--brass);aspect-ratio:1/1}
 .card-body{padding:18px 20px 20px;display:flex;flex-direction:column;gap:10px;flex:1}
@@ -113,6 +113,18 @@ select:focus-visible{outline:2px solid var(--brass)}
 .tip.skala{border-left-color:var(--brass);margin-top:0;margin-bottom:14px}
 .modal-img.noimg,.card-img.noimg{display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-size:64px;color:var(--brass);background:var(--panel-2)}
 .modal-img.noimg{aspect-ratio:2/1;max-height:none}
+
+.chiprow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.chiplbl{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);min-width:120px}
+.chip{display:inline-flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--line);color:var(--muted);
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;padding:7px 13px;border-radius:20px;cursor:pointer;transition:color .2s,border-color .2s}
+.chip:hover{color:var(--bone)}
+.chip.on{color:var(--brass-bright);border-color:var(--brass)}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.landchip{display:inline-block;border:1px solid;border-radius:20px;font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;padding:3px 9px;margin-right:4px}
+.pick-filters{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.pick-filters select{background:var(--panel-2);border:1px solid var(--line);color:var(--bone);font-family:var(--mono);font-size:11px;padding:7px 9px;border-radius:8px;cursor:pointer}
+@media(max-width:720px){.chiplbl{min-width:100%}}
 
 /* modal */
 .overlay{position:fixed;inset:0;z-index:200;background:rgba(12,11,9,.85);backdrop-filter:blur(6px);
@@ -214,6 +226,8 @@ footer .logo{font-size:24px}
       <option value="navn">A–Å</option>
     </select>
   </div>
+  <div class="chiprow" id="landChips" aria-label="Filtrér efter oprindelse"></div>
+  <div class="chiprow" id="hovedChips" aria-label="Filtrér efter hovedingrediens"></div>
   <div class="grid" id="grid"></div>
 </section>
 
@@ -223,12 +237,17 @@ footer .logo{font-size:24px}
   <div class="list-wrap">
     <div class="list-picker">
       <h4>Vælg retter</h4>
+      <div class="pick-filters">
+        <select id="pickLandSel" aria-label="Filtrér efter oprindelse"></select>
+        <select id="pickHovedSel" aria-label="Filtrér efter hovedingrediens"></select>
+      </div>
       <div id="picker"></div>
     </div>
     <div class="list-out">
       <h4>Din liste</h4>
       <div id="listOut"><p class="empty-list">Ingen retter valgt endnu — sæt kryds til venstre, eller brug „Læg i kurven" på en opskrift.</p></div>
       <div class="list-actions">
+        <button class="btn primary" id="pdfBtn">Send som fil (PDF)</button>
         <button class="btn" id="copyBtn">Kopiér listen</button>
         <button class="btn" id="clearBtn">Ryd listen</button>
       </div>
@@ -266,7 +285,7 @@ footer .logo{font-size:24px}
    ================================================================ */
 const RECIPES = [
 {
-  id:"pasta-alfredo",
+  id:"pasta-alfredo", land:"italiensk", hoved:"kylling",
   titel:"Pasta Alfredo",
   intro:"Alfredo lyder måske ikke som noget, der smager af Italien — men tag ikke fejl af navnet. Den cremede pastaret sender tankerne sydpå.",
   min:20, pers:5, kcal:400,
@@ -295,7 +314,7 @@ const RECIPES = [
   tip:null
 },
 {
-  id:"tortilla-oksekod",
+  id:"tortilla-oksekod", land:"mexicansk", hoved:"oksek\u00f8d",
   titel:"Tortilla med oksekød",
   intro:"Den mexicanske ret, som er et hit hos både store og små i familien — og som er hyggelig at samles om.",
   min:20, pers:1, kcal:350,
@@ -319,7 +338,7 @@ const RECIPES = [
   tip:"Ønsker du ekstra mexicanervibes, kan du tilføje tajinkrydderi og jalapeños til oksekødet."
 },
 {
-  id:"lasagne",
+  id:"lasagne", land:"italiensk", hoved:"oksek\u00f8d",
   titel:"Lasagne",
   intro:"Favoritten over dem alle. De fleste børnefamilier elsker lasagne. Maden kan passe sig selv, og frokosten er reddet dagen derpå, hvis der er mere tilbage efter aftensmaden.",
   min:50, pers:4, kcal:375,
@@ -342,7 +361,7 @@ const RECIPES = [
   tip:null
 },
 {
-  id:"kylling-kartoffelsalat",
+  id:"kylling-kartoffelsalat", land:"andet", hoved:"kylling",
   titel:"Kylling med kartoffelsalat og naanbrød",
   intro:"Når det skal være nemt, er denne lækre sommerservering et perfekt aftensmåltid.",
   min:15, pers:1, kcal:350,
@@ -363,7 +382,7 @@ const RECIPES = [
   tip:null
 },
 {
-  id:"pepperonipizza",
+  id:"pepperonipizza", land:"italiensk", hoved:"andet",
   titel:"Light pepperonipizza",
   intro:"Er du til pepperonipizzaen fra den lokale pizzamand? Så kommer du med garanti til at elske denne light-pizza, som kun indeholder halvdelen af kalorierne fra pizzariaet. Den smager fantastisk, er let at lave og passer sig selv i ovnen. Perfekt fredag aften til familiehygge.",
   min:20, pers:2, kcal:375,
@@ -386,7 +405,7 @@ const RECIPES = [
   tip:"Skal det være ekstra billigt, kan du skifte surdejspizzabunden ud med færdig pizzadej."
 },
 {
-  id:"hakkebof-bearnaise",
+  id:"hakkebof-bearnaise", land:"andet", hoved:"oksek\u00f8d",
   titel:"Hakkebøf med bearnaise og fritter",
   intro:"En favorit til weekenden! Men hvorfor nøjes med det én gang om ugen, når du kan spise det hver dag?",
   min:25, pers:1, kcal:350,
@@ -395,21 +414,21 @@ const RECIPES = [
     {navn:"bølgeskårne pomfritter", maengde:"125 g", sektion:"Frost"},
     {navn:"grønne ærter", maengde:"40 g", sektion:"Frost"},
     {navn:"hakket oksekød", maengde:"100 g", sektion:"Kød & pålæg"},
-    {navn:"Bodylab Olive Spray", maengde:"2 spray", sektion:"Kolonial"},
-    {navn:"Svansø færdiglavet bearnaisesauce", maengde:"40 g", sektion:"Krydderier & sauce"},
+    {navn:"olivenoliespray", maengde:"2 spray", sektion:"Kolonial"},
+    {navn:"færdiglavet bearnaisesauce", maengde:"40 g", sektion:"Krydderier & sauce"},
     {navn:"salt og peber", maengde:"", sektion:"Krydderier & sauce"}
   ],
   trin:[
     "Lav pomfritterne i ovnen.",
     "Kog ærterne i en gryde med letsaltet vand i cirka 3 minutter.",
-    "Form oksekødet til en bøf. Steg bøffen på en pande med Bodylab Olive Spray ved mellemhøj varme, indtil bøffen er gennemstegt og gylden på begge sider.",
+    "Form oksekødet til en bøf. Steg bøffen på en pande med olivenoliespray ved mellemhøj varme, indtil bøffen er gennemstegt og gylden på begge sider.",
     "Tilbered bearnaisesovsen efter anvisningen på glasset.",
     "Servér hakkebøffen med pomfritter og grønne ærter. Smag til med salt, peber og andre krydderier."
   ],
   tip:null
 },
 {
-  id:"hawaiipizza",
+  id:"hawaiipizza", land:"italiensk", hoved:"andet",
   titel:"Light Hawaiipizza",
   intro:"Pizzaen, som deler vandene. Skal der ananas p\u00e5 eller ej? Det synes vi, der skal \u2014 og denne pizza spiser vi selv mindst en gang om ugen.",
   min:20, pers:2, kcal:360,
@@ -432,7 +451,7 @@ const RECIPES = [
   tip:"Skal det v\u00e6re ekstra billigt, kan du skifte surdejspizzabunden ud med f\u00e6rdig pizzadej."
 },
 {
-  id:"kyllingedeller",
+  id:"kyllingedeller", land:"andet", hoved:"kylling",
   titel:"Kyllingedeller med sweet fries",
   intro:"Vores kyllingefrikadeller er et l\u00e6kkert kalorielet alternativ til den almindelige frikadelle. Smagen fra r\u00f8d peber og l\u00f8g s\u00e6tter prikken over i'et.",
   min:30, pers:1, kcal:450,
@@ -463,7 +482,7 @@ const RECIPES = [
   tip:null
 },
 {
-  id:"mexipasta",
+  id:"mexipasta", land:"mexicansk", hoved:"kylling",
   titel:"Mexipasta",
   intro:"Denne pastaret er cremet i konsistensen og meget m\u00e6ttende. En l\u00e6kker smagsoplevelse, der leder tankerne hen p\u00e5 Mexico.",
   min:30, pers:5, kcal:440,
@@ -491,7 +510,7 @@ const RECIPES = [
   tip:"\u00d8nsker du ekstra mexicanervibes, kan du tilf\u00f8je tajinkrydderi til din kylling."
 },
 {
-  id:"macncheese",
+  id:"macncheese", land:"amerikansk", hoved:"kylling",
   titel:"Mac'n'cheese",
   intro:"En ret med r\u00f8dder i USA, som enhver b\u00f8rnefamilie ogs\u00e5 elsker her i Danmark. Cremet i konsistensen og med masser af volumen fra osten.",
   min:25, pers:5, kcal:450,
@@ -525,7 +544,7 @@ const RECIPES = [
   tip:null
 },
 {
-  id:"boller-i-karry",
+  id:"boller-i-karry", land:"andet", hoved:"oksek\u00f8d",
   titel:"Boller i karry",
   intro:"Vel nok en af de mest velkendte retter i de danske familier. Vi har lavet en kalorielet version til dig, s\u00e5 du i din livsstilsoml\u00e6gning med lavere kalorieindtag stadig kan spise med, n\u00e5r der serveres boller i karry.",
   min:25, pers:6, kcal:300,
@@ -562,7 +581,7 @@ const RECIPES = [
   tip:"Vil du give dine ris yderligere smag, kan du komme lime i risene, mens de koger. Retten bliver smukkere af at blive toppet med friskhakket persille inden servering."
 },
 {
-  id:"burger-sweet-fries",
+  id:"burger-sweet-fries", land:"amerikansk", hoved:"oksek\u00f8d",
   titel:"Burger med sweet fries",
   intro:"Do it the American way. En l\u00e6kker burger med fries on the side. I denne kalorielette version f\u00e5r du fornemmelsen af den gode junkfood \u2014 og du kan spise med god samvittighed.",
   min:30, pers:1, kcal:500,
@@ -591,19 +610,19 @@ const RECIPES = [
   tip:null
 },
 {
-  id:"kebabdurum",
+  id:"kebabdurum", land:"andet", hoved:"oksek\u00f8d",
   titel:"Kebabdurum",
   intro:"Denne durumrulle smager som den, du f\u00e5r fra den lokale grillbar, men indeholder kun omkring en tredjedel af de kalorier, du ellers ville f\u00e5. Spis den med god samvittighed.",
   min:20, pers:1, kcal:500,
   img:"kebabdurum.jpg",
   ingredienser:[
-    {navn:"oksekebab (Rema 1000)", maengde:"100 g", sektion:"K\u00f8d & p\u00e5l\u00e6g"},
+    {navn:"oksekebab, f\u00e6rdigsk\u00e5ret", maengde:"100 g", sektion:"K\u00f8d & p\u00e5l\u00e6g"},
     {navn:"salt og peber", maengde:"", sektion:"Krydderier & sauce"},
-    {navn:"Gestus forbagt fladbr\u00f8d", maengde:"1 stk.", sektion:"Br\u00f8d & bager"},
+    {navn:"forbagt fladbr\u00f8d", maengde:"1 stk.", sektion:"Br\u00f8d & bager"},
     {navn:"r\u00f8dl\u00f8g", maengde:"", sektion:"Frugt & gr\u00f8nt"},
     {navn:"icebergsalat", maengde:"50 g", sektion:"Frugt & gr\u00f8nt"},
     {navn:"tomat", maengde:"", sektion:"Frugt & gr\u00f8nt"},
-    {navn:"B\u00e4hncke kebabdressing", maengde:"10 g", sektion:"Krydderier & sauce"},
+    {navn:"kebabdressing", maengde:"10 g", sektion:"Krydderier & sauce"},
     {navn:"revet mozzarella 13 %", maengde:"20 g", sektion:"Ost"}
   ],
   trin:[
@@ -615,13 +634,13 @@ const RECIPES = [
   tip:null
 },
 {
-  id:"pitadrom",
+  id:"pitadrom", land:"andet", hoved:"oksek\u00f8d",
   titel:"Pitadr\u00f8m",
   intro:"En ret, der kan spises med fingrene, og som er elsket af b\u00e5de b\u00f8rn og voksne.",
   min:15, pers:1, kcal:500,
   img:"pitadrom.jpg",
   ingredienser:[
-    {navn:"oksekebab (Rema 1000)", maengde:"165 g", sektion:"K\u00f8d & p\u00e5l\u00e6g"},
+    {navn:"oksekebab, f\u00e6rdigsk\u00e5ret", maengde:"165 g", sektion:"K\u00f8d & p\u00e5l\u00e6g"},
     {navn:"icebergsalat", maengde:"", sektion:"Frugt & gr\u00f8nt"},
     {navn:"r\u00f8dl\u00f8g", maengde:"", sektion:"Frugt & gr\u00f8nt"},
     {navn:"tomat", maengde:"", sektion:"Frugt & gr\u00f8nt"},
@@ -638,7 +657,7 @@ const RECIPES = [
   tip:"Du kan bruge \u00bd avokado i stedet for mayonnaise."
 },
 {
-  id:"skinkebrod",
+  id:"skinkebrod", land:"andet", hoved:"andet",
   titel:"Skinkebr\u00f8d",
   intro:"Dette skinkebr\u00f8d er fyldigt i smagen og er ekstra godt i madpakken dagen efter.",
   min:45, pers:4, kcal:350,
@@ -652,14 +671,14 @@ const RECIPES = [
     {navn:"porrer", maengde:"50 g", sektion:"Frugt & gr\u00f8nt"},
     {navn:"r\u00f8dl\u00f8g", maengde:"1 stk.", sektion:"Frugt & gr\u00f8nt"},
     {navn:"pizzadej", maengde:"400 g", sektion:"K\u00f8l & f\u00e6rdigretter"},
-    {navn:"Callowfit Mayo", maengde:"4 spsk", sektion:"Krydderier & sauce"},
+    {navn:"let mayonnaise", maengde:"4 spsk", sektion:"Krydderier & sauce"},
     {navn:"feta", maengde:"40 g", sektion:"Ost"}
   ],
   trin:[
     "Skyr og Philadelphia Light r\u00f8res sammen.",
     "Tilf\u00f8j skinkestrimlerne, og r\u00f8r dem sammen med massen.",
     "Lav fyldet ved at skylle gr\u00f8ntsagerne og hakke dem i mindre stykker. Bland dem derefter i massen med skinkestrimlerne.",
-    "Rul pizzadejen ud, og sm\u00f8r den med Callowfit Mayo.",
+    "Rul pizzadejen ud, og sm\u00f8r den med let mayonnaise.",
     "I midten af dejen h\u00e6ldes fyldet p\u00e5. Top derefter med feta.",
     "I begge sider sk\u00e6res strimler i v-form, som foldes p\u00e5 tv\u00e6rs ind over fyldet. Alle strimler foldes p\u00e5 kryds af hinanden, s\u00e5 du f\u00e5r t\u00e6rten lukket.",
     "Bag br\u00f8det i ovnen i ca. 30 minutter ved 180-200 grader."
@@ -667,7 +686,7 @@ const RECIPES = [
   tip:null
 },
 {
-  id:"flaeskesteg",
+  id:"flaeskesteg", land:"andet", hoved:"andet",
   titel:"Fl\u00e6skesteg med brun sovs og kartofler",
   intro:"N\u00e5r stegen er i ovnen, og sovsen r\u00f8res rundt, breder duften af jul sig i k\u00f8kkenet. Her f\u00e5r du danskernes julefavorit.",
   min:90, pers:1, kcal:500,
@@ -697,7 +716,7 @@ const RECIPES = [
   tip:"Du kan med fordel tilberede en hel fl\u00e6skesteg. S\u00e5 sparer du b\u00e5de tid og penge og kan nyde stegen flere dage i tr\u00e6k."
 },
 {
-  id:"pasta-kodsovs",
+  id:"pasta-kodsovs", land:"italiensk", hoved:"oksek\u00f8d",
   titel:"Pasta med k\u00f8dsovs",
   intro:"Denne ret f\u00e5r de italienske vibes frem i selv det mest danske k\u00f8kken, n\u00e5r den l\u00e6kre og smagsfulde k\u00f8dsovs toppes med parmesan \u2014 mums!",
   min:35, pers:1, kcal:400,
@@ -718,7 +737,7 @@ const RECIPES = [
   tip:"Du kan bruge overskydende k\u00f8dsovs til at lave lasagne. Det sparer tid og er en god m\u00e5de at undg\u00e5 madspild."
 },
 {
-  id:"paprikagryde",
+  id:"paprikagryde", land:"andet", hoved:"kylling",
   titel:"Paprikagryde",
   intro:"En varm og m\u00e6ttende ret, der er perfekt til vinterm\u00e5nederne. Du kan med fordel forberede til flere dage ad gangen, da den er let at varme op.",
   min:30, pers:1, kcal:400,
@@ -752,7 +771,7 @@ const RECIPES = [
   tip:null
 },
 {
-  id:"kylling-i-karry",
+  id:"kylling-i-karry", land:"asiatisk", hoved:"kylling",
   titel:"Kylling i karry",
   intro:"En l\u00e6kker og nem hverdagsret, som giver smagsl\u00f8gene en oplevelse.",
   min:35, pers:1, kcal:400,
@@ -782,7 +801,7 @@ const RECIPES = [
   tip:null
 },
 {
-  id:"biksemad",
+  id:"biksemad", land:"andet", hoved:"kylling",
   titel:"Biksemad med p\u00f8lser",
   intro:null,
   min:35, pers:1, kcal:400,
@@ -805,14 +824,14 @@ const RECIPES = [
   tip:null
 },
 {
-  id:"kebabmix",
+  id:"kebabmix", land:"andet", hoved:"oksek\u00f8d",
   titel:"Kebabmix med sweet fries",
   intro:"En klassiker, som nok aldrig g\u00e5r af mode, og det forst\u00e5r man godt, n\u00e5r man \u00e5bner munden og tager den f\u00f8rste bid.",
   min:35, pers:1, kcal:400,
   img:"kebabmix.jpg",
   ingredienser:[
     {navn:"sweet potato fries, frost", maengde:"150 g", sektion:"Frost"},
-    {navn:"kebab (Rema 1000)", maengde:"100 g", sektion:"K\u00f8d & p\u00e5l\u00e6g"},
+    {navn:"kebab, f\u00e6rdigsk\u00e5ret", maengde:"100 g", sektion:"K\u00f8d & p\u00e5l\u00e6g"},
     {navn:"icebergsalat", maengde:"", sektion:"Frugt & gr\u00f8nt"},
     {navn:"agurk", maengde:"", sektion:"Frugt & gr\u00f8nt"},
     {navn:"tomat", maengde:"", sektion:"Frugt & gr\u00f8nt"},
@@ -829,7 +848,7 @@ const RECIPES = [
   tip:"Er du ikke til sweet potato fries, kan du udskifte med almindelige kartoffelfritter."
 },
 {
-  id:"mexibowl",
+  id:"mexibowl", land:"mexicansk", hoved:"oksek\u00f8d",
   titel:"Mexibowl",
   intro:"Denne ret er frisk med et spicy twist. Der er knas fra tortillachipsene, der er fylde fra oksek\u00f8det, og du f\u00e5r spice fra salsaen.",
   min:30, pers:1, kcal:475,
@@ -853,7 +872,7 @@ const RECIPES = [
   tip:null
 },
 {
-  id:"nuggets",
+  id:"nuggets", land:"amerikansk", hoved:"kylling",
   titel:"Nuggets",
   intro:"En b\u00f8rnemenu med hjemmelavede, l\u00e6kre nuggets, der er crispy og smagfulde.",
   min:30, pers:1, kcal:350,
@@ -878,35 +897,42 @@ const RECIPES = [
   ],
   tip:"Crispy nuggets laves p\u00e5 samme m\u00e5de som Crispy chicken poke bowl. Vi anbefaler, at du laver retterne sammen for at spare tid og penge."
 },
-{"id": "teriyaki-kylling", "titel": "Teriyaki-kylling med ris og broccoli", "intro": "S\u00f8d, salt og klar p\u00e5 under en halv time. Teriyakisaucen g\u00f8r alt arbejdet, mens risene koger.", "min": 25, "pers": 1, "kcal": 450, "img": null, "genereret": true, "ingredienser": [{"navn": "ris", "maengde": "50 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "kyllingefilet", "maengde": "125 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "teriyakisauce", "maengde": "2 spsk", "sektion": "Krydderier & sauce"}, {"navn": "broccoli", "maengde": "100 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "gulerod", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "sesamfr\u00f8", "maengde": "1 tsk", "sektion": "Kolonial"}], "trin": ["Kog risene efter anvisningen p\u00e5 pakken.", "Sk\u00e6r kyllingen i strimler, og steg den p\u00e5 en varm pande, til den er gennemstegt.", "Sk\u00e6r broccoli i sm\u00e5 buketter og gulerod i tynde skiver, og svits dem med p\u00e5 panden et par minutter \u2014 de skal beholde lidt bid.", "H\u00e6ld teriyakisaucen over, og vend det hele, til alt er blankt og varmt.", "Anret over risene, og drys med sesamfr\u00f8."], "tip": "Vil du have mere sauce, kan du str\u00e6kke teriyakien med et par spiseskefulde af risenes kogevand."},
-{"id": "stegte-nudler", "titel": "Stegte nudler med kylling og \u00e6g", "intro": "Wok-agtig hverdagsmad, hvor alt laves p\u00e5 \u00e9n pande \u2014 og opvasken bliver derefter.", "min": 25, "pers": 1, "kcal": 425, "img": null, "genereret": true, "ingredienser": [{"navn": "nudler", "maengde": "50 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "kyllingefilet", "maengde": "100 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "\u00e6g", "maengde": "1 stk.", "sektion": "Mejeri & \u00e6g"}, {"navn": "r\u00f8d peberfrugt", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "gulerod", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "for\u00e5rsl\u00f8g", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "hvidl\u00f8g", "maengde": "1 fed", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "sojasauce", "maengde": "2 spsk", "sektion": "Krydderier & sauce"}], "trin": ["Kog nudlerne efter anvisningen p\u00e5 pakken, og h\u00e6ld vandet fra.", "Sk\u00e6r kylling, peberfrugt og gulerod i strimler, og hak hvidl\u00f8get fint.", "Steg kyllingen p\u00e5 en varm pande, til den er gennemstegt. Tils\u00e6t gr\u00f8ntsager og hvidl\u00f8g, og svits et par minutter.", "Skub det hele ud til siden af panden, kn\u00e6k \u00e6gget i midten, og r\u00f8r det til r\u00f8r\u00e6g.", "Vend nudlerne i med sojasauce, og steg det hele sammen 1-2 minutter.", "Anret i en sk\u00e5l, og top med snittet for\u00e5rsl\u00f8g."], "tip": null},
-{"id": "sursod-kylling", "titel": "Kylling i surs\u00f8d sauce", "intro": "Klassikeren fra den kinesiske grillbar \u2014 her i en let version, hvor ananassen g\u00f8r saucen frisk.", "min": 30, "pers": 1, "kcal": 400, "img": null, "genereret": true, "ingredienser": [{"navn": "ris", "maengde": "50 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "kyllingefilet", "maengde": "125 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "ananas i tern p\u00e5 d\u00e5se", "maengde": "50 g", "sektion": "Kolonial"}, {"navn": "r\u00f8d peberfrugt", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "l\u00f8g", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "surs\u00f8d sauce", "maengde": "40 g", "sektion": "Krydderier & sauce"}], "trin": ["Kog risene efter anvisningen p\u00e5 pakken.", "Sk\u00e6r kyllingen i tern, og steg den gylden p\u00e5 en varm pande.", "Sk\u00e6r peberfrugt og l\u00f8g i grove stykker, og svits dem med i et par minutter.", "Tils\u00e6t ananas og surs\u00f8d sauce, og lad det simre, til alt er varmt og blankt.", "Anret risene p\u00e5 en tallerken, og top med den surs\u00f8de kylling."], "tip": null},
-{"id": "asiatisk-oksesalat", "titel": "Asiatisk oksek\u00f8dssalat", "intro": "Lun salat med k\u00f8lige gr\u00f8ntsager, spr\u00f8de peanuts og en dressing, der rammer b\u00e5de salt, syrligt og s\u00f8dt.", "min": 20, "pers": 1, "kcal": 425, "img": null, "genereret": true, "ingredienser": [{"navn": "hakket oksek\u00f8d 3-7 %", "maengde": "100 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "risnudler", "maengde": "40 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "agurk", "maengde": "50 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "gulerod", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "icebergsalat", "maengde": "50 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "sojasauce", "maengde": "1 spsk", "sektion": "Krydderier & sauce"}, {"navn": "sweet chilisauce", "maengde": "1 spsk", "sektion": "Krydderier & sauce"}, {"navn": "lime", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "peanuts", "maengde": "10 g", "sektion": "Kolonial"}], "trin": ["L\u00e6g risnudlerne i bl\u00f8d i kogende vand efter anvisningen p\u00e5 pakken, og h\u00e6ld vandet fra.", "Steg oksek\u00f8det p\u00e5 en varm pande, til det er gyldenbrunt og spr\u00f8dt i kanterne.", "Snit agurk, gulerod og salat fint, og anret det i en sk\u00e5l med nudlerne.", "R\u00f8r en dressing af sojasauce, sweet chili og limesaft.", "Top salaten med det varme oksek\u00f8d, h\u00e6ld dressingen over, og drys med hakkede peanuts."], "tip": null},
-{"id": "sojalaks", "titel": "Sojaglaseret laks med ris og gr\u00f8nt", "intro": "Laksen glaseres med soja og honning og passer sig selv i ovnen, mens du ordner resten.", "min": 25, "pers": 1, "kcal": 425, "img": null, "genereret": true, "ingredienser": [{"navn": "laksefilet", "maengde": "100 g", "sektion": "Frost"}, {"navn": "ris", "maengde": "40 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "broccoli", "maengde": "75 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "gr\u00f8nne b\u00f8nner", "maengde": "50 g", "sektion": "Frost"}, {"navn": "sojasauce", "maengde": "1 spsk", "sektion": "Krydderier & sauce"}, {"navn": "honning", "maengde": "1 tsk", "sektion": "Kolonial"}], "trin": ["Kog risene efter anvisningen p\u00e5 pakken.", "R\u00f8r soja og honning sammen, og pensl laksen med glasuren.", "Bag laksen i ovnen ved 180 grader i 15-18 minutter.", "Damp broccoli og b\u00f8nner, til de har lidt bid.", "Anret laksen over risene med det gr\u00f8nne ved siden af, og h\u00e6ld resten af glasuren over."], "tip": null},
-{"id": "chili-con-carne", "titel": "Chili con carne light", "intro": "Gryderetten, der bliver bedre af at st\u00e5 \u2014 lav en portion, og du er d\u00e6kket ind et par dage frem.", "min": 40, "pers": 4, "kcal": 400, "img": null, "genereret": true, "ingredienser": [{"navn": "hakket oksek\u00f8d 3-7 %", "maengde": "400 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "kidneyb\u00f8nner (d\u00e5se, dr\u00e6net)", "maengde": "240 g", "sektion": "Kolonial"}, {"navn": "hakkede tomater", "maengde": "400 g", "sektion": "Kolonial"}, {"navn": "majs (d\u00e5se)", "maengde": "100 g", "sektion": "Kolonial"}, {"navn": "l\u00f8g", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "r\u00f8d peberfrugt", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "Tex Mex-krydderi", "maengde": "1 brev", "sektion": "Krydderier & sauce"}, {"navn": "ris", "maengde": "185 g (t\u00f8r)", "sektion": "Kolonial"}], "trin": ["Kog risene efter anvisningen p\u00e5 pakken.", "Hak l\u00f8get, og sk\u00e6r peberfrugten i tern.", "Brun oksek\u00f8det i en gryde, og tils\u00e6t l\u00f8g og peberfrugt. Svits et par minutter.", "Tils\u00e6t Tex Mex-krydderi, hakkede tomater, kidneyb\u00f8nner og majs.", "Lad chilien simre i mindst 15 minutter \u2014 gerne l\u00e6ngere. Smag til med salt og peber.", "Anret risene i sk\u00e5le, og top med chili con carne."], "tip": "En klat Cheasy neutral skyr p\u00e5 toppen giver cremet modspil til chilien \u2014 n\u00e6sten uden ekstra kalorier."},
-{"id": "quesadilla", "titel": "Quesadilla med kylling", "intro": "Spr\u00f8d p\u00e5 ydersiden, smeltet i midten. Sk\u00e6r den i trekanter, og dyp i salsa.", "min": 20, "pers": 1, "kcal": 475, "img": null, "genereret": true, "ingredienser": [{"navn": "fuldkornstortillas", "maengde": "2 stk.", "sektion": "Kolonial"}, {"navn": "kyllingefilet", "maengde": "100 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "revet mozzarella 13 %", "maengde": "40 g", "sektion": "Ost"}, {"navn": "r\u00f8d peberfrugt", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "salsa", "maengde": "25 g", "sektion": "Krydderier & sauce"}], "trin": ["Steg kyllingen p\u00e5 en pande, og sk\u00e6r den i sm\u00e5 tern.", "Snit peberfrugten fint.", "Fordel ost, kylling og peberfrugt p\u00e5 den ene tortilla, og l\u00e6g den anden ovenp\u00e5.", "Steg quesadillaen p\u00e5 en t\u00f8r pande ved middel varme et par minutter p\u00e5 hver side, til osten er smeltet og overfladen gylden.", "Sk\u00e6r i trekanter, og serv\u00e9r med salsa til dip."], "tip": null},
-{"id": "blode-tacos", "titel": "Bl\u00f8de tacos med kylling", "intro": "Fredagsstemning uden fredagskalorier. Skyr-dressingen med lime snyder enhver til at tro, det er creme fraiche.", "min": 20, "pers": 1, "kcal": 425, "img": null, "genereret": true, "ingredienser": [{"navn": "sm\u00e5 tortillas", "maengde": "2 stk.", "sektion": "Kolonial"}, {"navn": "hakket kylling 3-6 %", "maengde": "125 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "salsa", "maengde": "30 g", "sektion": "Krydderier & sauce"}, {"navn": "icebergsalat", "maengde": "50 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "tomat", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "Cheasy neutral skyr", "maengde": "50 g", "sektion": "Mejeri & \u00e6g"}, {"navn": "lime", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "revet mozzarella 13 %", "maengde": "15 g", "sektion": "Ost"}], "trin": ["Steg det hakkede kyllingek\u00f8d p\u00e5 en varm pande, til det er gennemstegt. Krydr efter smag.", "Snit salat og tomat fint.", "R\u00f8r skyr sammen med limesaft og en smule salt til en frisk dressing.", "Varm tortillaerne kort p\u00e5 en t\u00f8r pande.", "Fyld tortillaerne med kylling, gr\u00f8nt og salsa, og top med skyr-dressing og ost."], "tip": null},
-{"id": "mexicansk-suppe", "titel": "Mexicansk kyllingesuppe", "intro": "En varmende suppe med fylde fra b\u00f8nner og majs \u2014 og knas fra tortillachips p\u00e5 toppen.", "min": 30, "pers": 1, "kcal": 400, "img": null, "genereret": true, "ingredienser": [{"navn": "kyllingefilet", "maengde": "100 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "sorte b\u00f8nner (d\u00e5se, dr\u00e6net)", "maengde": "80 g", "sektion": "Kolonial"}, {"navn": "majs (d\u00e5se)", "maengde": "50 g", "sektion": "Kolonial"}, {"navn": "hakkede tomater", "maengde": "200 g", "sektion": "Kolonial"}, {"navn": "h\u00f8nsebouillon", "maengde": "1 terning", "sektion": "Kolonial"}, {"navn": "Tex Mex-krydderi", "maengde": "1 tsk", "sektion": "Krydderier & sauce"}, {"navn": "tortillachips", "maengde": "20 g", "sektion": "Kolonial"}, {"navn": "Cheasy neutral skyr", "maengde": "30 g", "sektion": "Mejeri & \u00e6g"}], "trin": ["Sk\u00e6r kyllingen i tern, og brun den i en gryde.", "Tils\u00e6t hakkede tomater, 3 dl vand, bouillonterning og Tex Mex-krydderi, og lad det simre 10 minutter.", "Tils\u00e6t b\u00f8nner og majs, og giv suppen 5 minutter mere.", "Smag til med salt og peber.", "Anret i en dyb sk\u00e5l, top med en klat skyr, og knus tortillachips over."], "tip": null},
-{"id": "burrito-light", "titel": "Burrito light", "intro": "Alt det gode fra burritoen, pakket stramt og lunet p\u00e5 panden, s\u00e5 den holder formen.", "min": 25, "pers": 1, "kcal": 475, "img": null, "genereret": true, "ingredienser": [{"navn": "stor fuldkornstortilla", "maengde": "1 stk.", "sektion": "Kolonial"}, {"navn": "hakket oksek\u00f8d 3-7 %", "maengde": "90 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "ris", "maengde": "25 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "sorte b\u00f8nner (d\u00e5se, dr\u00e6net)", "maengde": "40 g", "sektion": "Kolonial"}, {"navn": "salsa", "maengde": "30 g", "sektion": "Krydderier & sauce"}, {"navn": "revet mozzarella 13 %", "maengde": "15 g", "sektion": "Ost"}], "trin": ["Kog risene efter anvisningen p\u00e5 pakken.", "Steg oksek\u00f8det p\u00e5 en pande, og krydr efter smag.", "L\u00e6g ris, oksek\u00f8d, b\u00f8nner, salsa og ost p\u00e5 midten af tortillaen.", "Fold siderne ind, og rul burritoen stramt sammen.", "Lun burritoen p\u00e5 en t\u00f8r pande med samlingen nedad, til den er gylden og holder formen."], "tip": null},
-{"id": "pulled-chicken", "titel": "Pulled chicken sandwich", "intro": "Langtidsfornemmelse p\u00e5 hverdagstid \u2014 kyllingen trevles og vendes i BBQ, og colesaw'en holder det hele friskt.", "min": 35, "pers": 1, "kcal": 425, "img": null, "genereret": true, "ingredienser": [{"navn": "burgerbolle", "maengde": "1 stk.", "sektion": "Br\u00f8d & bager"}, {"navn": "kyllingefilet", "maengde": "125 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "BBQ-sauce", "maengde": "2 spsk", "sektion": "Krydderier & sauce"}, {"navn": "spidsk\u00e5l", "maengde": "75 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "gulerod", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "Cheasy neutral skyr", "maengde": "30 g", "sektion": "Mejeri & \u00e6g"}], "trin": ["Kog kyllingen m\u00f8r i letsaltet vand i cirka 15 minutter.", "Trevl kyllingen med to gafler, og vend den i BBQ-saucen p\u00e5 en varm pande.", "Snit spidsk\u00e5l og gulerod helt fint, og vend det med skyr og en smule salt til en hurtig coleslaw.", "Lun burgerbollen, og fyld den med pulled chicken og coleslaw."], "tip": null},
-{"id": "club-sandwich", "titel": "Club sandwich light", "intro": "Den klassiske trelags-f\u00f8lelse \u2014 her med kalkunbacon og let dressing, s\u00e5 frokosten ikke v\u00e6lter dagen.", "min": 20, "pers": 1, "kcal": 275, "img": null, "genereret": true, "ingredienser": [{"navn": "fuldkornstoast", "maengde": "2 skiver", "sektion": "Br\u00f8d & bager"}, {"navn": "kyllingefilet", "maengde": "80 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "kalkunbacon", "maengde": "2 skiver", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "tomat", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "icebergsalat", "maengde": "30 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "Callowfit Mayo", "maengde": "1 spsk", "sektion": "Krydderier & sauce"}], "trin": ["Steg kyllingen p\u00e5 en pande, og sk\u00e6r den i skiver.", "Steg kalkunbaconen spr\u00f8d p\u00e5 samme pande.", "Rist toastbr\u00f8det gyldent.", "Sm\u00f8r br\u00f8det med Callowfit Mayo, og byg sandwichen op med salat, tomat, kylling og bacon.", "Sk\u00e6r den over diagonalt, og hold den eventuelt samlet med en tandstik."], "tip": null},
-{"id": "sloppy-joe", "titel": "Sloppy joe light", "intro": "Amerikansk komfort i en bolle \u2014 k\u00f8dsovsen skal v\u00e6re netop s\u00e5 rodet, som navnet lover.", "min": 25, "pers": 1, "kcal": 375, "img": null, "genereret": true, "ingredienser": [{"navn": "burgerbolle", "maengde": "1 stk.", "sektion": "Br\u00f8d & bager"}, {"navn": "hakket oksek\u00f8d 3-7 %", "maengde": "100 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "tomatsauce", "maengde": "80 g", "sektion": "Kolonial"}, {"navn": "l\u00f8g", "maengde": "\u00bc stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "r\u00f8d peberfrugt", "maengde": "\u00bc stk.", "sektion": "Frugt & gr\u00f8nt"}], "trin": ["Hak l\u00f8g og peberfrugt fint.", "Brun oksek\u00f8det p\u00e5 en pande, og svits l\u00f8g og peberfrugt med.", "Tils\u00e6t tomatsauce, og lad det simre 5-10 minutter, til det er tykt. Smag til med salt og peber.", "Lun burgerbollen, og fyld den godt med k\u00f8dsovsen \u2014 det m\u00e5 gerne flyde lidt."], "tip": null},
-{"id": "hotdog-tallerken", "titel": "Hotdogtallerken", "intro": "P\u00f8lsevognens favorit hjemme i k\u00f8kkenet \u2014 med kyllingep\u00f8lser og alt det, der h\u00f8rer til.", "min": 15, "pers": 1, "kcal": 375, "img": null, "genereret": true, "ingredienser": [{"navn": "kyllingep\u00f8lser", "maengde": "2 stk.", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "hotdogbr\u00f8d", "maengde": "1 stk.", "sektion": "Br\u00f8d & bager"}, {"navn": "ketchup", "maengde": "2 tsk", "sektion": "Krydderier & sauce"}, {"navn": "sennep", "maengde": "1 tsk", "sektion": "Krydderier & sauce"}, {"navn": "agurkesalat", "maengde": "30 g", "sektion": "Kolonial"}, {"navn": "ristede l\u00f8g", "maengde": "10 g", "sektion": "Kolonial"}, {"navn": "r\u00e5 l\u00f8g", "maengde": "\u00bc stk.", "sektion": "Frugt & gr\u00f8nt"}], "trin": ["Kog eller steg kyllingep\u00f8lserne, til de er gennemvarme.", "Lun hotdogbr\u00f8det p\u00e5 en t\u00f8r pande eller i ovnen.", "Hak det r\u00e5 l\u00f8g fint.", "Anret p\u00f8lserne i og ved siden af br\u00f8det, og top med ketchup, sennep, agurkesalat, r\u00e5 og ristede l\u00f8g."], "tip": null},
-{"id": "caesarsalat", "titel": "C\u00e6sarsalat med kylling", "intro": "Spr\u00f8d romaine, varm kylling og knasende croutoner \u2014 dressingen er let, men smager ikke s\u00e5dan.", "min": 20, "pers": 1, "kcal": 350, "img": null, "genereret": true, "ingredienser": [{"navn": "kyllingefilet", "maengde": "125 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "romainesalat", "maengde": "100 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "rugbr\u00f8d", "maengde": "1 skive", "sektion": "Br\u00f8d & bager"}, {"navn": "parmesan", "maengde": "15 g", "sektion": "Ost"}, {"navn": "c\u00e6sardressing light", "maengde": "30 g", "sektion": "Krydderier & sauce"}, {"navn": "kalkunbacon", "maengde": "2 skiver", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}], "trin": ["Steg kyllingen p\u00e5 en pande, og lad den hvile, inden den sk\u00e6res i skiver.", "Steg kalkunbaconen spr\u00f8d, og sk\u00e6r rugbr\u00f8det i tern. Rist ternene gyldne p\u00e5 panden \u2014 det er dine croutoner.", "Skyl og snit romainesalaten groft.", "Vend salaten med dressingen, og top med kylling, bacon, croutoner og revet parmesan."], "tip": null},
-{"id": "pasta-pesto", "titel": "Pasta med kylling og pesto", "intro": "Fem ingredienser og tyve minutter \u2014 pestoen binder det hele sammen, og tomaterne friskner op.", "min": 25, "pers": 1, "kcal": 450, "img": null, "genereret": true, "ingredienser": [{"navn": "fuldkornspasta", "maengde": "60 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "kyllingefilet", "maengde": "100 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "gr\u00f8n pesto", "maengde": "20 g", "sektion": "Krydderier & sauce"}, {"navn": "cherrytomater", "maengde": "100 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "parmesan", "maengde": "10 g", "sektion": "Ost"}], "trin": ["Kog pastaen al dente i letsaltet vand.", "Steg kyllingen p\u00e5 en pande, og sk\u00e6r den i skiver.", "Halv\u00e9r cherrytomaterne.", "Vend den varme pasta med pesto, kylling og tomater \u2014 brug lidt af pastavandet, hvis det skal v\u00e6re mere cremet.", "Top med revet parmesan."], "tip": null},
-{"id": "svamperisotto", "titel": "Risotto med svampe", "intro": "Risotto kr\u00e6ver ikke andet end t\u00e5lmodighed og en grydeske. R\u00f8r, smag og r\u00f8r igen.", "min": 30, "pers": 1, "kcal": 400, "img": null, "genereret": true, "ingredienser": [{"navn": "risottoris", "maengde": "60 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "champignon", "maengde": "150 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "l\u00f8g", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "h\u00f8nsebouillon", "maengde": "1 terning", "sektion": "Kolonial"}, {"navn": "K\u00e6rg\u00e5rden Let", "maengde": "10 g", "sektion": "Mejeri & \u00e6g"}, {"navn": "parmesan", "maengde": "20 g", "sektion": "Ost"}], "trin": ["Kog 5 dl vand op med bouillonterningen.", "Sk\u00e6r champignonerne i skiver, og steg dem gyldne p\u00e5 en pande. Tag dem af, og stil dem til side.", "Hak l\u00f8get fint, og svits det blankt i sm\u00f8rret i en gryde. Tils\u00e6t risene, og r\u00f8r, til de er blanke.", "Tils\u00e6t bouillonen lidt ad gangen under omr\u00f8ring \u2014 vent med n\u00e6ste skefuld, til den forrige er optaget. Det tager cirka 18 minutter.", "Vend svampene og det meste af parmesanen i, og smag til med salt og peber.", "Anret med resten af parmesanen p\u00e5 toppen."], "tip": null},
-{"id": "caprese-kylling", "titel": "Caprese-kylling fra ovnen", "intro": "Kylling, tomat og smeltet mozzarella \u2014 Italiens flag p\u00e5 en tallerken, med kogte kartofler til.", "min": 35, "pers": 1, "kcal": 425, "img": null, "genereret": true, "ingredienser": [{"navn": "kyllingefilet", "maengde": "150 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "frisk mozzarella light", "maengde": "50 g", "sektion": "Ost"}, {"navn": "tomat", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "kartofler", "maengde": "200 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "balsamico", "maengde": "1 tsk", "sektion": "Kolonial"}, {"navn": "frisk basilikum", "maengde": "", "sektion": "Frugt & gr\u00f8nt"}], "trin": ["Kog kartoflerne m\u00f8re i letsaltet vand.", "Sk\u00e6r et par dybe snit i kyllingefileten, og krydr med salt og peber.", "Fyld snittene med skiver af tomat og mozzarella.", "Bag kyllingen i et ildfast fad ved 200 grader i 20-25 minutter, til den er gennemstegt og osten smeltet.", "Anret med kartoflerne, dryp med balsamico, og top med friske basilikumblade."], "tip": null},
-{"id": "minestrone", "titel": "Minestrone", "intro": "Italiens svar p\u00e5 en god gr\u00f8ntsagssuppe \u2014 b\u00f8nner og pasta g\u00f8r den til et helt m\u00e5ltid.", "min": 30, "pers": 1, "kcal": 325, "img": null, "genereret": true, "ingredienser": [{"navn": "pasta", "maengde": "30 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "hvide b\u00f8nner (d\u00e5se, dr\u00e6net)", "maengde": "80 g", "sektion": "Kolonial"}, {"navn": "hakkede tomater", "maengde": "200 g", "sektion": "Kolonial"}, {"navn": "gulerod", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "squash", "maengde": "\u00bc stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "l\u00f8g", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "h\u00f8nsebouillon", "maengde": "1 terning", "sektion": "Kolonial"}, {"navn": "parmesan", "maengde": "10 g", "sektion": "Ost"}], "trin": ["Hak l\u00f8g, gulerod og squash i sm\u00e5 tern.", "Svits gr\u00f8ntsagerne kort i en gryde.", "Tils\u00e6t hakkede tomater, 4 dl vand og bouillonterningen, og lad suppen simre 10 minutter.", "Tils\u00e6t pasta og b\u00f8nner, og kog, til pastaen er al dente.", "Smag til med salt og peber, og serv\u00e9r med revet parmesan p\u00e5 toppen."], "tip": null},
-{"id": "gnocchi-tomat", "titel": "Gnocchi i tomatsauce", "intro": "Bl\u00f8de gnocchi i en enkel tomatsauce med smeltet ost \u2014 klar, inden ovnen er varm.", "min": 20, "pers": 1, "kcal": 350, "img": null, "genereret": true, "ingredienser": [{"navn": "gnocchi", "maengde": "150 g", "sektion": "Kolonial"}, {"navn": "pastasauce", "maengde": "100 g", "sektion": "Kolonial"}, {"navn": "revet mozzarella 13 %", "maengde": "30 g", "sektion": "Ost"}, {"navn": "frisk spinat", "maengde": "50 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "hvidl\u00f8g", "maengde": "1 fed", "sektion": "Frugt & gr\u00f8nt"}], "trin": ["Kog gnocchi efter anvisningen p\u00e5 pakken \u2014 de er f\u00e6rdige, n\u00e5r de flyder op.", "Svits presset hvidl\u00f8g kort p\u00e5 en pande, og tils\u00e6t pastasaucen.", "Vend spinaten i saucen, til den falder sammen.", "Vend de dryppede gnocchi i saucen, og top med mozzarella.", "L\u00e6g l\u00e5g p\u00e5 panden et par minutter, til osten er smeltet \u2014 eller giv den et par minutter under grillen i ovnen."], "tip": null},
-{"id": "rod-karry", "titel": "R\u00f8d karry med kylling", "intro": "Karrypastaen br\u00e6ndes af, s\u00e5 smagen folder sig ud \u2014 resten er bare at lade gryden passe sig selv.", "min": 30, "pers": 1, "kcal": 400, "img": null, "genereret": true, "ingredienser": [{"navn": "ris", "maengde": "40 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "kyllingefilet", "maengde": "125 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "r\u00f8d karrypasta", "maengde": "1 spsk", "sektion": "Krydderier & sauce"}, {"navn": "kokosm\u00e6lk light", "maengde": "100 ml", "sektion": "Kolonial"}, {"navn": "r\u00f8d peberfrugt", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "gr\u00f8nne b\u00f8nner", "maengde": "50 g", "sektion": "Frost"}], "trin": ["Kog risene efter anvisningen p\u00e5 pakken.", "Sk\u00e6r kyllingen i skiver, og peberfrugten i strimler.", "Svits karrypastaen i en gryde i 1-2 minutter, til den dufter.", "Tils\u00e6t kyllingen, og steg den, til den er hvid p\u00e5 alle sider.", "H\u00e6ld kokosm\u00e6lken ved sammen med peberfrugt og b\u00f8nner, og lad retten simre 8-10 minutter.", "Smag til med salt, og anret over risene."], "tip": "Et par dryp fishsauce og lidt limesaft til sidst giver retten det autentiske thailandske l\u00f8ft."},
-{"id": "pad-thai", "titel": "Pad thai light med rejer", "intro": "Gadek\u00f8kkenets store klassiker \u2014 s\u00f8d, syrlig og salt p\u00e5 samme tid, med knas fra peanuts.", "min": 25, "pers": 1, "kcal": 425, "img": null, "genereret": true, "ingredienser": [{"navn": "risnudler", "maengde": "50 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "rejer", "maengde": "100 g", "sektion": "Frost"}, {"navn": "\u00e6g", "maengde": "1 stk.", "sektion": "Mejeri & \u00e6g"}, {"navn": "b\u00f8nnespirer", "maengde": "50 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "for\u00e5rsl\u00f8g", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "fishsauce", "maengde": "1 spsk", "sektion": "Krydderier & sauce"}, {"navn": "sweet chilisauce", "maengde": "1 tsk", "sektion": "Krydderier & sauce"}, {"navn": "lime", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "peanuts", "maengde": "8 g", "sektion": "Kolonial"}], "trin": ["L\u00e6g risnudlerne i bl\u00f8d i kogende vand efter anvisningen p\u00e5 pakken, og h\u00e6ld vandet fra.", "Steg de opt\u00f8ede rejer kort p\u00e5 en varm pande, og tag dem af.", "Kn\u00e6k \u00e6gget p\u00e5 panden, og r\u00f8r det til r\u00f8r\u00e6g.", "Vend nudler, rejer, b\u00f8nnespirer, fishsauce og sweet chili p\u00e5 panden, og steg det hele sammen 1-2 minutter.", "Anret med snittet for\u00e5rsl\u00f8g, hakkede peanuts og limeb\u00e5de til at presse over."], "tip": null},
-{"id": "gron-karry", "titel": "Gr\u00f8n karry med kylling", "intro": "Den gr\u00f8nne karrys friske styrke m\u00f8der kokosm\u00e6lkens ro \u2014 juster selv, hvor vild den skal v\u00e6re.", "min": 30, "pers": 1, "kcal": 400, "img": null, "genereret": true, "ingredienser": [{"navn": "ris", "maengde": "40 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "kyllingefilet", "maengde": "115 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "gr\u00f8n karrypasta", "maengde": "1 spsk", "sektion": "Krydderier & sauce"}, {"navn": "kokosm\u00e6lk light", "maengde": "100 ml", "sektion": "Kolonial"}, {"navn": "squash", "maengde": "\u00bc stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "gr\u00f8nne b\u00f8nner", "maengde": "50 g", "sektion": "Frost"}, {"navn": "babymajs (d\u00e5se)", "maengde": "50 g", "sektion": "Kolonial"}], "trin": ["Kog risene efter anvisningen p\u00e5 pakken.", "Sk\u00e6r kyllingen i skiver og squashen i halve skiver.", "Svits karrypastaen i en gryde i 1-2 minutter, og tils\u00e6t kyllingen. Steg, til den er hvid p\u00e5 alle sider.", "H\u00e6ld kokosm\u00e6lken ved sammen med squash, b\u00f8nner og babymajs, og lad retten simre 8-10 minutter.", "Smag til, og anret over risene."], "tip": null},
-{"id": "larb", "titel": "Thailandsk kyllingesalat (larb)", "intro": "Lun, hakket kylling vendt med lime, fishsauce og friske urter \u2014 enkel og overraskende m\u00e6ttende.", "min": 20, "pers": 1, "kcal": 325, "img": null, "genereret": true, "ingredienser": [{"navn": "hakket kylling 3-6 %", "maengde": "125 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "ris", "maengde": "40 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "lime", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "fishsauce", "maengde": "1 spsk", "sektion": "Krydderier & sauce"}, {"navn": "r\u00f8dl\u00f8g", "maengde": "\u00bc stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "agurk", "maengde": "50 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "frisk mynte eller koriander", "maengde": "", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "chiliflager", "maengde": "", "sektion": "Krydderier & sauce"}], "trin": ["Kog risene efter anvisningen p\u00e5 pakken.", "Steg det hakkede kyllingek\u00f8d p\u00e5 en t\u00f8r, varm pande, til det er gennemstegt og let gyldent.", "Snit r\u00f8dl\u00f8get helt fint, og sk\u00e6r agurken i skiver.", "Vend den varme kylling med limesaft, fishsauce, r\u00f8dl\u00f8g og chiliflager efter smag.", "Anret med ris, agurk og masser af friske urter over."], "tip": null},
-{"id": "tom-kha", "titel": "Kokossuppe med kylling", "intro": "Inspireret af tom kha gai \u2014 cremet af kokos, frisk af lime og med nudler, der g\u00f8r den til aftensmad.", "min": 25, "pers": 1, "kcal": 375, "img": null, "genereret": true, "ingredienser": [{"navn": "kyllingefilet", "maengde": "100 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "kokosm\u00e6lk light", "maengde": "150 ml", "sektion": "Kolonial"}, {"navn": "risnudler", "maengde": "40 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "champignon", "maengde": "75 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "h\u00f8nsebouillon", "maengde": "\u00bd terning", "sektion": "Kolonial"}, {"navn": "frisk ingef\u00e6r", "maengde": "1 tsk, revet", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "lime", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "fishsauce", "maengde": "1 tsk", "sektion": "Krydderier & sauce"}], "trin": ["L\u00e6g risnudlerne i bl\u00f8d i kogende vand efter anvisningen p\u00e5 pakken.", "Sk\u00e6r kyllingen i tynde skiver og champignonerne i kvarte.", "Kog 2 dl vand op med kokosm\u00e6lk, bouillon og revet ingef\u00e6r.", "Tils\u00e6t kylling og champignon, og lad suppen simre 8-10 minutter, til kyllingen er gennemkogt.", "Smag til med fishsauce og limesaft, og anret suppen over nudlerne i en dyb sk\u00e5l."], "tip": null}
+{"id": "teriyaki-kylling", "land": "asiatisk", "hoved": "kylling", "titel": "Teriyaki-kylling med ris og broccoli", "intro": "S\u00f8d, salt og klar p\u00e5 under en halv time. Teriyakisaucen g\u00f8r alt arbejdet, mens risene koger.", "min": 25, "pers": 1, "kcal": 450, "img": null, "genereret": true, "ingredienser": [{"navn": "ris", "maengde": "50 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "kyllingefilet", "maengde": "125 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "teriyakisauce", "maengde": "2 spsk", "sektion": "Krydderier & sauce"}, {"navn": "broccoli", "maengde": "100 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "gulerod", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "sesamfr\u00f8", "maengde": "1 tsk", "sektion": "Kolonial"}], "trin": ["Kog risene efter anvisningen p\u00e5 pakken.", "Sk\u00e6r kyllingen i strimler, og steg den p\u00e5 en varm pande, til den er gennemstegt.", "Sk\u00e6r broccoli i sm\u00e5 buketter og gulerod i tynde skiver, og svits dem med p\u00e5 panden et par minutter \u2014 de skal beholde lidt bid.", "H\u00e6ld teriyakisaucen over, og vend det hele, til alt er blankt og varmt.", "Anret over risene, og drys med sesamfr\u00f8."], "tip": "Vil du have mere sauce, kan du str\u00e6kke teriyakien med et par spiseskefulde af risenes kogevand."},
+{"id": "stegte-nudler", "land": "asiatisk", "hoved": "kylling", "titel": "Stegte nudler med kylling og \u00e6g", "intro": "Wok-agtig hverdagsmad, hvor alt laves p\u00e5 \u00e9n pande \u2014 og opvasken bliver derefter.", "min": 25, "pers": 1, "kcal": 425, "img": null, "genereret": true, "ingredienser": [{"navn": "nudler", "maengde": "50 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "kyllingefilet", "maengde": "100 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "\u00e6g", "maengde": "1 stk.", "sektion": "Mejeri & \u00e6g"}, {"navn": "r\u00f8d peberfrugt", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "gulerod", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "for\u00e5rsl\u00f8g", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "hvidl\u00f8g", "maengde": "1 fed", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "sojasauce", "maengde": "2 spsk", "sektion": "Krydderier & sauce"}], "trin": ["Kog nudlerne efter anvisningen p\u00e5 pakken, og h\u00e6ld vandet fra.", "Sk\u00e6r kylling, peberfrugt og gulerod i strimler, og hak hvidl\u00f8get fint.", "Steg kyllingen p\u00e5 en varm pande, til den er gennemstegt. Tils\u00e6t gr\u00f8ntsager og hvidl\u00f8g, og svits et par minutter.", "Skub det hele ud til siden af panden, kn\u00e6k \u00e6gget i midten, og r\u00f8r det til r\u00f8r\u00e6g.", "Vend nudlerne i med sojasauce, og steg det hele sammen 1-2 minutter.", "Anret i en sk\u00e5l, og top med snittet for\u00e5rsl\u00f8g."], "tip": null},
+{"id": "sursod-kylling", "land": "asiatisk", "hoved": "kylling", "titel": "Kylling i surs\u00f8d sauce", "intro": "Klassikeren fra den kinesiske grillbar \u2014 her i en let version, hvor ananassen g\u00f8r saucen frisk.", "min": 30, "pers": 1, "kcal": 400, "img": null, "genereret": true, "ingredienser": [{"navn": "ris", "maengde": "50 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "kyllingefilet", "maengde": "125 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "ananas i tern p\u00e5 d\u00e5se", "maengde": "50 g", "sektion": "Kolonial"}, {"navn": "r\u00f8d peberfrugt", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "l\u00f8g", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "surs\u00f8d sauce", "maengde": "40 g", "sektion": "Krydderier & sauce"}], "trin": ["Kog risene efter anvisningen p\u00e5 pakken.", "Sk\u00e6r kyllingen i tern, og steg den gylden p\u00e5 en varm pande.", "Sk\u00e6r peberfrugt og l\u00f8g i grove stykker, og svits dem med i et par minutter.", "Tils\u00e6t ananas og surs\u00f8d sauce, og lad det simre, til alt er varmt og blankt.", "Anret risene p\u00e5 en tallerken, og top med den surs\u00f8de kylling."], "tip": null},
+{"id": "asiatisk-oksesalat", "land": "asiatisk", "hoved": "oksek\u00f8d", "titel": "Asiatisk oksek\u00f8dssalat", "intro": "Lun salat med k\u00f8lige gr\u00f8ntsager, spr\u00f8de peanuts og en dressing, der rammer b\u00e5de salt, syrligt og s\u00f8dt.", "min": 20, "pers": 1, "kcal": 425, "img": null, "genereret": true, "ingredienser": [{"navn": "hakket oksek\u00f8d 3-7 %", "maengde": "100 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "risnudler", "maengde": "40 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "agurk", "maengde": "50 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "gulerod", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "icebergsalat", "maengde": "50 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "sojasauce", "maengde": "1 spsk", "sektion": "Krydderier & sauce"}, {"navn": "sweet chilisauce", "maengde": "1 spsk", "sektion": "Krydderier & sauce"}, {"navn": "lime", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "peanuts", "maengde": "10 g", "sektion": "Kolonial"}], "trin": ["L\u00e6g risnudlerne i bl\u00f8d i kogende vand efter anvisningen p\u00e5 pakken, og h\u00e6ld vandet fra.", "Steg oksek\u00f8det p\u00e5 en varm pande, til det er gyldenbrunt og spr\u00f8dt i kanterne.", "Snit agurk, gulerod og salat fint, og anret det i en sk\u00e5l med nudlerne.", "R\u00f8r en dressing af sojasauce, sweet chili og limesaft.", "Top salaten med det varme oksek\u00f8d, h\u00e6ld dressingen over, og drys med hakkede peanuts."], "tip": null},
+{"id": "sojalaks", "land": "asiatisk", "hoved": "fisk", "titel": "Sojaglaseret laks med ris og gr\u00f8nt", "intro": "Laksen glaseres med soja og honning og passer sig selv i ovnen, mens du ordner resten.", "min": 25, "pers": 1, "kcal": 425, "img": null, "genereret": true, "ingredienser": [{"navn": "laksefilet", "maengde": "100 g", "sektion": "Frost"}, {"navn": "ris", "maengde": "40 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "broccoli", "maengde": "75 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "gr\u00f8nne b\u00f8nner", "maengde": "50 g", "sektion": "Frost"}, {"navn": "sojasauce", "maengde": "1 spsk", "sektion": "Krydderier & sauce"}, {"navn": "honning", "maengde": "1 tsk", "sektion": "Kolonial"}], "trin": ["Kog risene efter anvisningen p\u00e5 pakken.", "R\u00f8r soja og honning sammen, og pensl laksen med glasuren.", "Bag laksen i ovnen ved 180 grader i 15-18 minutter.", "Damp broccoli og b\u00f8nner, til de har lidt bid.", "Anret laksen over risene med det gr\u00f8nne ved siden af, og h\u00e6ld resten af glasuren over."], "tip": null},
+{"id": "chili-con-carne", "land": "mexicansk", "hoved": "oksek\u00f8d", "titel": "Chili con carne light", "intro": "Gryderetten, der bliver bedre af at st\u00e5 \u2014 lav en portion, og du er d\u00e6kket ind et par dage frem.", "min": 40, "pers": 4, "kcal": 400, "img": null, "genereret": true, "ingredienser": [{"navn": "hakket oksek\u00f8d 3-7 %", "maengde": "400 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "kidneyb\u00f8nner (d\u00e5se, dr\u00e6net)", "maengde": "240 g", "sektion": "Kolonial"}, {"navn": "hakkede tomater", "maengde": "400 g", "sektion": "Kolonial"}, {"navn": "majs (d\u00e5se)", "maengde": "100 g", "sektion": "Kolonial"}, {"navn": "l\u00f8g", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "r\u00f8d peberfrugt", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "Tex Mex-krydderi", "maengde": "1 brev", "sektion": "Krydderier & sauce"}, {"navn": "ris", "maengde": "185 g (t\u00f8r)", "sektion": "Kolonial"}], "trin": ["Kog risene efter anvisningen p\u00e5 pakken.", "Hak l\u00f8get, og sk\u00e6r peberfrugten i tern.", "Brun oksek\u00f8det i en gryde, og tils\u00e6t l\u00f8g og peberfrugt. Svits et par minutter.", "Tils\u00e6t Tex Mex-krydderi, hakkede tomater, kidneyb\u00f8nner og majs.", "Lad chilien simre i mindst 15 minutter \u2014 gerne l\u00e6ngere. Smag til med salt og peber.", "Anret risene i sk\u00e5le, og top med chili con carne."], "tip": "En klat Cheasy neutral skyr p\u00e5 toppen giver cremet modspil til chilien \u2014 n\u00e6sten uden ekstra kalorier."},
+{"id": "quesadilla", "land": "mexicansk", "hoved": "kylling", "titel": "Quesadilla med kylling", "intro": "Spr\u00f8d p\u00e5 ydersiden, smeltet i midten. Sk\u00e6r den i trekanter, og dyp i salsa.", "min": 20, "pers": 1, "kcal": 475, "img": null, "genereret": true, "ingredienser": [{"navn": "fuldkornstortillas", "maengde": "2 stk.", "sektion": "Kolonial"}, {"navn": "kyllingefilet", "maengde": "100 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "revet mozzarella 13 %", "maengde": "40 g", "sektion": "Ost"}, {"navn": "r\u00f8d peberfrugt", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "salsa", "maengde": "25 g", "sektion": "Krydderier & sauce"}], "trin": ["Steg kyllingen p\u00e5 en pande, og sk\u00e6r den i sm\u00e5 tern.", "Snit peberfrugten fint.", "Fordel ost, kylling og peberfrugt p\u00e5 den ene tortilla, og l\u00e6g den anden ovenp\u00e5.", "Steg quesadillaen p\u00e5 en t\u00f8r pande ved middel varme et par minutter p\u00e5 hver side, til osten er smeltet og overfladen gylden.", "Sk\u00e6r i trekanter, og serv\u00e9r med salsa til dip."], "tip": null},
+{"id": "blode-tacos", "land": "mexicansk", "hoved": "kylling", "titel": "Bl\u00f8de tacos med kylling", "intro": "Fredagsstemning uden fredagskalorier. Skyr-dressingen med lime snyder enhver til at tro, det er creme fraiche.", "min": 20, "pers": 1, "kcal": 425, "img": null, "genereret": true, "ingredienser": [{"navn": "sm\u00e5 tortillas", "maengde": "2 stk.", "sektion": "Kolonial"}, {"navn": "hakket kylling 3-6 %", "maengde": "125 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "salsa", "maengde": "30 g", "sektion": "Krydderier & sauce"}, {"navn": "icebergsalat", "maengde": "50 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "tomat", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "Cheasy neutral skyr", "maengde": "50 g", "sektion": "Mejeri & \u00e6g"}, {"navn": "lime", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "revet mozzarella 13 %", "maengde": "15 g", "sektion": "Ost"}], "trin": ["Steg det hakkede kyllingek\u00f8d p\u00e5 en varm pande, til det er gennemstegt. Krydr efter smag.", "Snit salat og tomat fint.", "R\u00f8r skyr sammen med limesaft og en smule salt til en frisk dressing.", "Varm tortillaerne kort p\u00e5 en t\u00f8r pande.", "Fyld tortillaerne med kylling, gr\u00f8nt og salsa, og top med skyr-dressing og ost."], "tip": null},
+{"id": "mexicansk-suppe", "land": "mexicansk", "hoved": "kylling", "titel": "Mexicansk kyllingesuppe", "intro": "En varmende suppe med fylde fra b\u00f8nner og majs \u2014 og knas fra tortillachips p\u00e5 toppen.", "min": 30, "pers": 1, "kcal": 400, "img": null, "genereret": true, "ingredienser": [{"navn": "kyllingefilet", "maengde": "100 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "sorte b\u00f8nner (d\u00e5se, dr\u00e6net)", "maengde": "80 g", "sektion": "Kolonial"}, {"navn": "majs (d\u00e5se)", "maengde": "50 g", "sektion": "Kolonial"}, {"navn": "hakkede tomater", "maengde": "200 g", "sektion": "Kolonial"}, {"navn": "h\u00f8nsebouillon", "maengde": "1 terning", "sektion": "Kolonial"}, {"navn": "Tex Mex-krydderi", "maengde": "1 tsk", "sektion": "Krydderier & sauce"}, {"navn": "tortillachips", "maengde": "20 g", "sektion": "Kolonial"}, {"navn": "Cheasy neutral skyr", "maengde": "30 g", "sektion": "Mejeri & \u00e6g"}], "trin": ["Sk\u00e6r kyllingen i tern, og brun den i en gryde.", "Tils\u00e6t hakkede tomater, 3 dl vand, bouillonterning og Tex Mex-krydderi, og lad det simre 10 minutter.", "Tils\u00e6t b\u00f8nner og majs, og giv suppen 5 minutter mere.", "Smag til med salt og peber.", "Anret i en dyb sk\u00e5l, top med en klat skyr, og knus tortillachips over."], "tip": null},
+{"id": "burrito-light", "land": "mexicansk", "hoved": "oksek\u00f8d", "titel": "Burrito light", "intro": "Alt det gode fra burritoen, pakket stramt og lunet p\u00e5 panden, s\u00e5 den holder formen.", "min": 25, "pers": 1, "kcal": 475, "img": null, "genereret": true, "ingredienser": [{"navn": "stor fuldkornstortilla", "maengde": "1 stk.", "sektion": "Kolonial"}, {"navn": "hakket oksek\u00f8d 3-7 %", "maengde": "90 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "ris", "maengde": "25 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "sorte b\u00f8nner (d\u00e5se, dr\u00e6net)", "maengde": "40 g", "sektion": "Kolonial"}, {"navn": "salsa", "maengde": "30 g", "sektion": "Krydderier & sauce"}, {"navn": "revet mozzarella 13 %", "maengde": "15 g", "sektion": "Ost"}], "trin": ["Kog risene efter anvisningen p\u00e5 pakken.", "Steg oksek\u00f8det p\u00e5 en pande, og krydr efter smag.", "L\u00e6g ris, oksek\u00f8d, b\u00f8nner, salsa og ost p\u00e5 midten af tortillaen.", "Fold siderne ind, og rul burritoen stramt sammen.", "Lun burritoen p\u00e5 en t\u00f8r pande med samlingen nedad, til den er gylden og holder formen."], "tip": null},
+{"id": "pulled-chicken", "land": "amerikansk", "hoved": "kylling", "titel": "Pulled chicken sandwich", "intro": "Langtidsfornemmelse p\u00e5 hverdagstid \u2014 kyllingen trevles og vendes i BBQ, og colesaw'en holder det hele friskt.", "min": 35, "pers": 1, "kcal": 425, "img": null, "genereret": true, "ingredienser": [{"navn": "burgerbolle", "maengde": "1 stk.", "sektion": "Br\u00f8d & bager"}, {"navn": "kyllingefilet", "maengde": "125 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "BBQ-sauce", "maengde": "2 spsk", "sektion": "Krydderier & sauce"}, {"navn": "spidsk\u00e5l", "maengde": "75 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "gulerod", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "Cheasy neutral skyr", "maengde": "30 g", "sektion": "Mejeri & \u00e6g"}], "trin": ["Kog kyllingen m\u00f8r i letsaltet vand i cirka 15 minutter.", "Trevl kyllingen med to gafler, og vend den i BBQ-saucen p\u00e5 en varm pande.", "Snit spidsk\u00e5l og gulerod helt fint, og vend det med skyr og en smule salt til en hurtig coleslaw.", "Lun burgerbollen, og fyld den med pulled chicken og coleslaw."], "tip": null},
+{"id": "club-sandwich", "land": "amerikansk", "hoved": "kylling", "titel": "Club sandwich light", "intro": "Den klassiske trelags-f\u00f8lelse \u2014 her med kalkunbacon og let dressing, s\u00e5 frokosten ikke v\u00e6lter dagen.", "min": 20, "pers": 1, "kcal": 275, "img": null, "genereret": true, "ingredienser": [{"navn": "fuldkornstoast", "maengde": "2 skiver", "sektion": "Br\u00f8d & bager"}, {"navn": "kyllingefilet", "maengde": "80 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "kalkunbacon", "maengde": "2 skiver", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "tomat", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "icebergsalat", "maengde": "30 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "let mayonnaise", "maengde": "1 spsk", "sektion": "Krydderier & sauce"}], "trin": ["Steg kyllingen p\u00e5 en pande, og sk\u00e6r den i skiver.", "Steg kalkunbaconen spr\u00f8d p\u00e5 samme pande.", "Rist toastbr\u00f8det gyldent.", "Sm\u00f8r br\u00f8det med let mayonnaise, og byg sandwichen op med salat, tomat, kylling og bacon.", "Sk\u00e6r den over diagonalt, og hold den eventuelt samlet med en tandstik."], "tip": null},
+{"id": "sloppy-joe", "land": "amerikansk", "hoved": "oksek\u00f8d", "titel": "Sloppy joe light", "intro": "Amerikansk komfort i en bolle \u2014 k\u00f8dsovsen skal v\u00e6re netop s\u00e5 rodet, som navnet lover.", "min": 25, "pers": 1, "kcal": 375, "img": null, "genereret": true, "ingredienser": [{"navn": "burgerbolle", "maengde": "1 stk.", "sektion": "Br\u00f8d & bager"}, {"navn": "hakket oksek\u00f8d 3-7 %", "maengde": "100 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "tomatsauce", "maengde": "80 g", "sektion": "Kolonial"}, {"navn": "l\u00f8g", "maengde": "\u00bc stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "r\u00f8d peberfrugt", "maengde": "\u00bc stk.", "sektion": "Frugt & gr\u00f8nt"}], "trin": ["Hak l\u00f8g og peberfrugt fint.", "Brun oksek\u00f8det p\u00e5 en pande, og svits l\u00f8g og peberfrugt med.", "Tils\u00e6t tomatsauce, og lad det simre 5-10 minutter, til det er tykt. Smag til med salt og peber.", "Lun burgerbollen, og fyld den godt med k\u00f8dsovsen \u2014 det m\u00e5 gerne flyde lidt."], "tip": null},
+{"id": "hotdog-tallerken", "land": "amerikansk", "hoved": "kylling", "titel": "Hotdogtallerken", "intro": "P\u00f8lsevognens favorit hjemme i k\u00f8kkenet \u2014 med kyllingep\u00f8lser og alt det, der h\u00f8rer til.", "min": 15, "pers": 1, "kcal": 375, "img": null, "genereret": true, "ingredienser": [{"navn": "kyllingep\u00f8lser", "maengde": "2 stk.", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "hotdogbr\u00f8d", "maengde": "1 stk.", "sektion": "Br\u00f8d & bager"}, {"navn": "ketchup", "maengde": "2 tsk", "sektion": "Krydderier & sauce"}, {"navn": "sennep", "maengde": "1 tsk", "sektion": "Krydderier & sauce"}, {"navn": "agurkesalat", "maengde": "30 g", "sektion": "Kolonial"}, {"navn": "ristede l\u00f8g", "maengde": "10 g", "sektion": "Kolonial"}, {"navn": "r\u00e5 l\u00f8g", "maengde": "\u00bc stk.", "sektion": "Frugt & gr\u00f8nt"}], "trin": ["Kog eller steg kyllingep\u00f8lserne, til de er gennemvarme.", "Lun hotdogbr\u00f8det p\u00e5 en t\u00f8r pande eller i ovnen.", "Hak det r\u00e5 l\u00f8g fint.", "Anret p\u00f8lserne i og ved siden af br\u00f8det, og top med ketchup, sennep, agurkesalat, r\u00e5 og ristede l\u00f8g."], "tip": null},
+{"id": "caesarsalat", "land": "amerikansk", "hoved": "kylling", "titel": "C\u00e6sarsalat med kylling", "intro": "Spr\u00f8d romaine, varm kylling og knasende croutoner \u2014 dressingen er let, men smager ikke s\u00e5dan.", "min": 20, "pers": 1, "kcal": 350, "img": null, "genereret": true, "ingredienser": [{"navn": "kyllingefilet", "maengde": "125 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "romainesalat", "maengde": "100 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "rugbr\u00f8d", "maengde": "1 skive", "sektion": "Br\u00f8d & bager"}, {"navn": "parmesan", "maengde": "15 g", "sektion": "Ost"}, {"navn": "c\u00e6sardressing light", "maengde": "30 g", "sektion": "Krydderier & sauce"}, {"navn": "kalkunbacon", "maengde": "2 skiver", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}], "trin": ["Steg kyllingen p\u00e5 en pande, og lad den hvile, inden den sk\u00e6res i skiver.", "Steg kalkunbaconen spr\u00f8d, og sk\u00e6r rugbr\u00f8det i tern. Rist ternene gyldne p\u00e5 panden \u2014 det er dine croutoner.", "Skyl og snit romainesalaten groft.", "Vend salaten med dressingen, og top med kylling, bacon, croutoner og revet parmesan."], "tip": null},
+{"id": "pasta-pesto", "land": "italiensk", "hoved": "kylling", "titel": "Pasta med kylling og pesto", "intro": "Fem ingredienser og tyve minutter \u2014 pestoen binder det hele sammen, og tomaterne friskner op.", "min": 25, "pers": 1, "kcal": 450, "img": null, "genereret": true, "ingredienser": [{"navn": "fuldkornspasta", "maengde": "60 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "kyllingefilet", "maengde": "100 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "gr\u00f8n pesto", "maengde": "20 g", "sektion": "Krydderier & sauce"}, {"navn": "cherrytomater", "maengde": "100 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "parmesan", "maengde": "10 g", "sektion": "Ost"}], "trin": ["Kog pastaen al dente i letsaltet vand.", "Steg kyllingen p\u00e5 en pande, og sk\u00e6r den i skiver.", "Halv\u00e9r cherrytomaterne.", "Vend den varme pasta med pesto, kylling og tomater \u2014 brug lidt af pastavandet, hvis det skal v\u00e6re mere cremet.", "Top med revet parmesan."], "tip": null},
+{"id": "svamperisotto", "land": "italiensk", "hoved": "vegetar", "titel": "Risotto med svampe", "intro": "Risotto kr\u00e6ver ikke andet end t\u00e5lmodighed og en grydeske. R\u00f8r, smag og r\u00f8r igen.", "min": 30, "pers": 1, "kcal": 400, "img": null, "genereret": true, "ingredienser": [{"navn": "risottoris", "maengde": "60 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "champignon", "maengde": "150 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "l\u00f8g", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "h\u00f8nsebouillon", "maengde": "1 terning", "sektion": "Kolonial"}, {"navn": "K\u00e6rg\u00e5rden Let", "maengde": "10 g", "sektion": "Mejeri & \u00e6g"}, {"navn": "parmesan", "maengde": "20 g", "sektion": "Ost"}], "trin": ["Kog 5 dl vand op med bouillonterningen.", "Sk\u00e6r champignonerne i skiver, og steg dem gyldne p\u00e5 en pande. Tag dem af, og stil dem til side.", "Hak l\u00f8get fint, og svits det blankt i sm\u00f8rret i en gryde. Tils\u00e6t risene, og r\u00f8r, til de er blanke.", "Tils\u00e6t bouillonen lidt ad gangen under omr\u00f8ring \u2014 vent med n\u00e6ste skefuld, til den forrige er optaget. Det tager cirka 18 minutter.", "Vend svampene og det meste af parmesanen i, og smag til med salt og peber.", "Anret med resten af parmesanen p\u00e5 toppen."], "tip": null},
+{"id": "caprese-kylling", "land": "italiensk", "hoved": "kylling", "titel": "Caprese-kylling fra ovnen", "intro": "Kylling, tomat og smeltet mozzarella \u2014 Italiens flag p\u00e5 en tallerken, med kogte kartofler til.", "min": 35, "pers": 1, "kcal": 425, "img": null, "genereret": true, "ingredienser": [{"navn": "kyllingefilet", "maengde": "150 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "frisk mozzarella light", "maengde": "50 g", "sektion": "Ost"}, {"navn": "tomat", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "kartofler", "maengde": "200 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "balsamico", "maengde": "1 tsk", "sektion": "Kolonial"}, {"navn": "frisk basilikum", "maengde": "", "sektion": "Frugt & gr\u00f8nt"}], "trin": ["Kog kartoflerne m\u00f8re i letsaltet vand.", "Sk\u00e6r et par dybe snit i kyllingefileten, og krydr med salt og peber.", "Fyld snittene med skiver af tomat og mozzarella.", "Bag kyllingen i et ildfast fad ved 200 grader i 20-25 minutter, til den er gennemstegt og osten smeltet.", "Anret med kartoflerne, dryp med balsamico, og top med friske basilikumblade."], "tip": null},
+{"id": "minestrone", "land": "italiensk", "hoved": "vegetar", "titel": "Minestrone", "intro": "Italiens svar p\u00e5 en god gr\u00f8ntsagssuppe \u2014 b\u00f8nner og pasta g\u00f8r den til et helt m\u00e5ltid.", "min": 30, "pers": 1, "kcal": 325, "img": null, "genereret": true, "ingredienser": [{"navn": "pasta", "maengde": "30 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "hvide b\u00f8nner (d\u00e5se, dr\u00e6net)", "maengde": "80 g", "sektion": "Kolonial"}, {"navn": "hakkede tomater", "maengde": "200 g", "sektion": "Kolonial"}, {"navn": "gulerod", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "squash", "maengde": "\u00bc stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "l\u00f8g", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "h\u00f8nsebouillon", "maengde": "1 terning", "sektion": "Kolonial"}, {"navn": "parmesan", "maengde": "10 g", "sektion": "Ost"}], "trin": ["Hak l\u00f8g, gulerod og squash i sm\u00e5 tern.", "Svits gr\u00f8ntsagerne kort i en gryde.", "Tils\u00e6t hakkede tomater, 4 dl vand og bouillonterningen, og lad suppen simre 10 minutter.", "Tils\u00e6t pasta og b\u00f8nner, og kog, til pastaen er al dente.", "Smag til med salt og peber, og serv\u00e9r med revet parmesan p\u00e5 toppen."], "tip": null},
+{"id": "gnocchi-tomat", "land": "italiensk", "hoved": "vegetar", "titel": "Gnocchi i tomatsauce", "intro": "Bl\u00f8de gnocchi i en enkel tomatsauce med smeltet ost \u2014 klar, inden ovnen er varm.", "min": 20, "pers": 1, "kcal": 350, "img": null, "genereret": true, "ingredienser": [{"navn": "gnocchi", "maengde": "150 g", "sektion": "Kolonial"}, {"navn": "pastasauce", "maengde": "100 g", "sektion": "Kolonial"}, {"navn": "revet mozzarella 13 %", "maengde": "30 g", "sektion": "Ost"}, {"navn": "frisk spinat", "maengde": "50 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "hvidl\u00f8g", "maengde": "1 fed", "sektion": "Frugt & gr\u00f8nt"}], "trin": ["Kog gnocchi efter anvisningen p\u00e5 pakken \u2014 de er f\u00e6rdige, n\u00e5r de flyder op.", "Svits presset hvidl\u00f8g kort p\u00e5 en pande, og tils\u00e6t pastasaucen.", "Vend spinaten i saucen, til den falder sammen.", "Vend de dryppede gnocchi i saucen, og top med mozzarella.", "L\u00e6g l\u00e5g p\u00e5 panden et par minutter, til osten er smeltet \u2014 eller giv den et par minutter under grillen i ovnen."], "tip": null},
+{"id": "rod-karry", "land": "thailandsk", "hoved": "kylling", "titel": "R\u00f8d karry med kylling", "intro": "Karrypastaen br\u00e6ndes af, s\u00e5 smagen folder sig ud \u2014 resten er bare at lade gryden passe sig selv.", "min": 30, "pers": 1, "kcal": 400, "img": null, "genereret": true, "ingredienser": [{"navn": "ris", "maengde": "40 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "kyllingefilet", "maengde": "125 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "r\u00f8d karrypasta", "maengde": "1 spsk", "sektion": "Krydderier & sauce"}, {"navn": "kokosm\u00e6lk light", "maengde": "100 ml", "sektion": "Kolonial"}, {"navn": "r\u00f8d peberfrugt", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "gr\u00f8nne b\u00f8nner", "maengde": "50 g", "sektion": "Frost"}], "trin": ["Kog risene efter anvisningen p\u00e5 pakken.", "Sk\u00e6r kyllingen i skiver, og peberfrugten i strimler.", "Svits karrypastaen i en gryde i 1-2 minutter, til den dufter.", "Tils\u00e6t kyllingen, og steg den, til den er hvid p\u00e5 alle sider.", "H\u00e6ld kokosm\u00e6lken ved sammen med peberfrugt og b\u00f8nner, og lad retten simre 8-10 minutter.", "Smag til med salt, og anret over risene."], "tip": "Et par dryp fishsauce og lidt limesaft til sidst giver retten det autentiske thailandske l\u00f8ft."},
+{"id": "pad-thai", "land": "thailandsk", "hoved": "fisk", "titel": "Pad thai light med rejer", "intro": "Gadek\u00f8kkenets store klassiker \u2014 s\u00f8d, syrlig og salt p\u00e5 samme tid, med knas fra peanuts.", "min": 25, "pers": 1, "kcal": 425, "img": null, "genereret": true, "ingredienser": [{"navn": "risnudler", "maengde": "50 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "rejer", "maengde": "100 g", "sektion": "Frost"}, {"navn": "\u00e6g", "maengde": "1 stk.", "sektion": "Mejeri & \u00e6g"}, {"navn": "b\u00f8nnespirer", "maengde": "50 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "for\u00e5rsl\u00f8g", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "fishsauce", "maengde": "1 spsk", "sektion": "Krydderier & sauce"}, {"navn": "sweet chilisauce", "maengde": "1 tsk", "sektion": "Krydderier & sauce"}, {"navn": "lime", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "peanuts", "maengde": "8 g", "sektion": "Kolonial"}], "trin": ["L\u00e6g risnudlerne i bl\u00f8d i kogende vand efter anvisningen p\u00e5 pakken, og h\u00e6ld vandet fra.", "Steg de opt\u00f8ede rejer kort p\u00e5 en varm pande, og tag dem af.", "Kn\u00e6k \u00e6gget p\u00e5 panden, og r\u00f8r det til r\u00f8r\u00e6g.", "Vend nudler, rejer, b\u00f8nnespirer, fishsauce og sweet chili p\u00e5 panden, og steg det hele sammen 1-2 minutter.", "Anret med snittet for\u00e5rsl\u00f8g, hakkede peanuts og limeb\u00e5de til at presse over."], "tip": null},
+{"id": "gron-karry", "land": "thailandsk", "hoved": "kylling", "titel": "Gr\u00f8n karry med kylling", "intro": "Den gr\u00f8nne karrys friske styrke m\u00f8der kokosm\u00e6lkens ro \u2014 juster selv, hvor vild den skal v\u00e6re.", "min": 30, "pers": 1, "kcal": 400, "img": null, "genereret": true, "ingredienser": [{"navn": "ris", "maengde": "40 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "kyllingefilet", "maengde": "115 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "gr\u00f8n karrypasta", "maengde": "1 spsk", "sektion": "Krydderier & sauce"}, {"navn": "kokosm\u00e6lk light", "maengde": "100 ml", "sektion": "Kolonial"}, {"navn": "squash", "maengde": "\u00bc stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "gr\u00f8nne b\u00f8nner", "maengde": "50 g", "sektion": "Frost"}, {"navn": "babymajs (d\u00e5se)", "maengde": "50 g", "sektion": "Kolonial"}], "trin": ["Kog risene efter anvisningen p\u00e5 pakken.", "Sk\u00e6r kyllingen i skiver og squashen i halve skiver.", "Svits karrypastaen i en gryde i 1-2 minutter, og tils\u00e6t kyllingen. Steg, til den er hvid p\u00e5 alle sider.", "H\u00e6ld kokosm\u00e6lken ved sammen med squash, b\u00f8nner og babymajs, og lad retten simre 8-10 minutter.", "Smag til, og anret over risene."], "tip": null},
+{"id": "larb", "land": "thailandsk", "hoved": "kylling", "titel": "Thailandsk kyllingesalat (larb)", "intro": "Lun, hakket kylling vendt med lime, fishsauce og friske urter \u2014 enkel og overraskende m\u00e6ttende.", "min": 20, "pers": 1, "kcal": 325, "img": null, "genereret": true, "ingredienser": [{"navn": "hakket kylling 3-6 %", "maengde": "125 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "ris", "maengde": "40 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "lime", "maengde": "1 stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "fishsauce", "maengde": "1 spsk", "sektion": "Krydderier & sauce"}, {"navn": "r\u00f8dl\u00f8g", "maengde": "\u00bc stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "agurk", "maengde": "50 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "frisk mynte eller koriander", "maengde": "", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "chiliflager", "maengde": "", "sektion": "Krydderier & sauce"}], "trin": ["Kog risene efter anvisningen p\u00e5 pakken.", "Steg det hakkede kyllingek\u00f8d p\u00e5 en t\u00f8r, varm pande, til det er gennemstegt og let gyldent.", "Snit r\u00f8dl\u00f8get helt fint, og sk\u00e6r agurken i skiver.", "Vend den varme kylling med limesaft, fishsauce, r\u00f8dl\u00f8g og chiliflager efter smag.", "Anret med ris, agurk og masser af friske urter over."], "tip": null},
+{"id": "tom-kha", "land": "thailandsk", "hoved": "kylling", "titel": "Kokossuppe med kylling", "intro": "Inspireret af tom kha gai \u2014 cremet af kokos, frisk af lime og med nudler, der g\u00f8r den til aftensmad.", "min": 25, "pers": 1, "kcal": 375, "img": null, "genereret": true, "ingredienser": [{"navn": "kyllingefilet", "maengde": "100 g", "sektion": "K\u00f8d & p\u00e5l\u00e6g"}, {"navn": "kokosm\u00e6lk light", "maengde": "150 ml", "sektion": "Kolonial"}, {"navn": "risnudler", "maengde": "40 g (t\u00f8r)", "sektion": "Kolonial"}, {"navn": "champignon", "maengde": "75 g", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "h\u00f8nsebouillon", "maengde": "\u00bd terning", "sektion": "Kolonial"}, {"navn": "frisk ingef\u00e6r", "maengde": "1 tsk, revet", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "lime", "maengde": "\u00bd stk.", "sektion": "Frugt & gr\u00f8nt"}, {"navn": "fishsauce", "maengde": "1 tsk", "sektion": "Krydderier & sauce"}], "trin": ["L\u00e6g risnudlerne i bl\u00f8d i kogende vand efter anvisningen p\u00e5 pakken.", "Sk\u00e6r kyllingen i tynde skiver og champignonerne i kvarte.", "Kog 2 dl vand op med kokosm\u00e6lk, bouillon og revet ingef\u00e6r.", "Tils\u00e6t kylling og champignon, og lad suppen simre 8-10 minutter, til kyllingen er gennemkogt.", "Smag til med fishsauce og limesaft, og anret suppen over nudlerne i en dyb sk\u00e5l."], "tip": null}
 ];
 
 /* Rækkefølgen på afdelinger, som du møder dem i Netto.
    Ret rækkefølgen her, hvis din lokale Netto er anderledes. */
+const LANDE = {asiatisk:"Asiatisk", mexicansk:"Mexicansk", amerikansk:"Amerikansk", italiensk:"Italiensk", thailandsk:"Thailandsk", andet:"Andet"};
+const LANDFARVE = {asiatisk:"#4fa3a5", mexicansk:"#c97f3d", amerikansk:"#6c8fd6", italiensk:"#86a94f", thailandsk:"#c05a8e", andet:"#8a8272"};
+const HOVEDING = {kylling:"Kylling", fisk:"Fisk", "oksek\u00f8d":"Oksek\u00f8d", vegetar:"Vegetar", andet:"Andet"};
+let filterLand = "alle", filterHoved = "alle";
+let pickLand = "alle", pickHoved = "alle";
+function landAf(r){ return LANDE[r.land] ? r.land : "andet"; }
+function hovedAf(r){ return HOVEDING[r.hoved] ? r.hoved : "andet"; }
 const NETTO_RUTE = ["Frugt & grønt","Brød & bager","Kød & pålæg","Køl & færdigretter","Mejeri & æg","Ost","Frost","Kolonial","Krydderier & sauce","Diverse"];
 
 /* ============ lagring (localStorage m. fallback) ============ */
@@ -990,6 +1016,21 @@ function starsHTML(id){
   return h+'</div>';
 }
 document.addEventListener("click", e=>{
+  const fl = e.target.closest("[data-fland]");
+  if(fl){ filterLand = fl.dataset.fland; renderGrid(); return; }
+  const fh = e.target.closest("[data-fhoved]");
+  if(fh){ filterHoved = fh.dataset.fhoved; renderGrid(); return; }
+  const vd = e.target.closest("[data-vaelg]");
+  if(vd){
+    basket = [vd.dataset.vaelg]; checked = {};
+    store.set("fk_basket", basket); store.set("fk_checked", checked);
+    renderGrid(); renderPicker(); renderList();
+    closeModal();
+    const sec = document.getElementById("indkob");
+    if(sec.scrollIntoView) sec.scrollIntoView({behavior:"smooth"});
+    toast("Indkøbsliste klar");
+    return;
+  }
   const st = e.target.closest(".star");
   if(!st) return;
   const wrap = st.closest(".stars");
@@ -1019,9 +1060,26 @@ function metaHTML(r){
   const pk = '<b>'+p+'</b> '+(p===1?'PERSON':'PERSONER')+(p!==r.pers?' <span style="opacity:.7">(skaleret)</span>':'');
   return '<div class="meta"><b>'+r.min+'</b> MIN \u00b7 '+pk+' \u00b7 <b>'+r.kcal+'</b> KCAL/PERS'+(p>1?' <span style="opacity:.7">(I ALT '+total+')</span>':'')+'</div>';
 }
+function renderChips(){
+  $("#landChips").innerHTML = '<span class="chiplbl">Oprindelse</span>'+
+    ['alle'].concat(Object.keys(LANDE)).map(k=>{
+      const on = filterLand===k;
+      const dot = k==='alle' ? '' : '<i class="dot" style="background:'+LANDFARVE[k]+'"></i>';
+      return '<button class="chip'+(on?' on':'')+'" data-fland="'+k+'">'+dot+(k==='alle'?'Alle':LANDE[k])+'</button>';
+    }).join('');
+  $("#hovedChips").innerHTML = '<span class="chiplbl">Hovedingrediens</span>'+
+    ['alle'].concat(Object.keys(HOVEDING)).map(k=>{
+      const on = filterHoved===k;
+      return '<button class="chip'+(on?' on':'')+'" data-fhoved="'+k+'">'+(k==='alle'?'Alle':HOVEDING[k])+'</button>';
+    }).join('');
+}
+function filtreret(list, land, hoved){
+  return list.filter(r=>(land==='alle'||landAf(r)===land)&&(hoved==='alle'||hovedAf(r)===hoved));
+}
 function renderGrid(){
+  renderChips();
   const sort = $("#sortSel").value;
-  const list = allRecipes().slice().sort((a,b)=>{
+  const list = filtreret(allRecipes(), filterLand, filterHoved).slice().sort((a,b)=>{
     if(sort==="rating") return (ratings[b.id]||0)-(ratings[a.id]||0) || a.titel.localeCompare(b.titel,"da");
     if(sort==="tid")    return a.min-b.min;
     if(sort==="kcal")   return a.kcal-b.kcal;
@@ -1029,11 +1087,13 @@ function renderGrid(){
   });
   $("#grid").innerHTML = list.map(r=>{
     const inB = basket.includes(r.id);
-    return '<article class="card">'+
+    const lf = LANDFARVE[landAf(r)];
+    return '<article class="card" style="border-color:'+lf+'">'+
       (r.genereret ? '<span class="gen-badge">Genereret</span>' : '')+
       imgHTML(r,"card-img")+
       '<div class="card-body">'+
         '<h3 data-open="'+r.id+'">'+esc(r.titel)+'</h3>'+
+        '<div><span class="landchip" style="color:'+lf+';border-color:'+lf+'">'+LANDE[landAf(r)]+'</span> <span class="landchip" style="color:var(--muted);border-color:var(--line)">'+HOVEDING[hovedAf(r)]+'</span></div>'+
         metaHTML(r)+
         starsHTML(r.id)+
         '<div class="card-actions">'+
@@ -1042,6 +1102,7 @@ function renderGrid(){
         '</div>'+
       '</div></article>';
   }).join("");
+  if(!list.length) $("#grid").innerHTML = '<p class="empty-list">Ingen retter matcher filtrene — prøv at nulstille dem.</p>';
   updateStats();
 }
 function updateStats(){
@@ -1067,6 +1128,7 @@ function openModal(id){
     imgHTML(r,"modal-img")+
     '<div class="modal-inner">'+
       '<h3>'+esc(r.titel)+'</h3>'+
+      '<div style="margin-top:8px"><span class="landchip" style="color:'+LANDFARVE[landAf(r)]+';border-color:'+LANDFARVE[landAf(r)]+'">'+LANDE[landAf(r)]+'</span> <span class="landchip" style="color:var(--muted);border-color:var(--line)">'+HOVEDING[hovedAf(r)]+'</span></div>'+
       (r.intro?'<p class="intro">'+esc(r.intro)+'</p>':'')+
       metaHTML(r)+
       '<div class="paxrow"><span class="rate-label">ANTAL PERSONER</span>'+paxSelectHTML(r,'data-pax-modal')+'</div>'+
@@ -1081,6 +1143,7 @@ function openModal(id){
         '</div>'+
       '</div>'+
       '<div class="modal-actions">'+
+        '<button class="btn primary" data-vaelg="'+r.id+'">Vælg denne — lav indkøbsliste</button>'+
         '<button class="btn'+(inB?' inlist':'')+'" data-basket="'+r.id+'">'+(inB?'I kurven ✓':'Læg i kurven')+'</button>'+
         starsHTML(r.id)+
       '</div>'+
@@ -1112,8 +1175,11 @@ document.addEventListener("click", e=>{
   if(open) openModal(id);
 });
 function renderPicker(){
-  $("#picker").innerHTML = allRecipes().map(r=>
-    '<div class="pick-item"><label style="display:flex;align-items:center;gap:10px;flex:1;cursor:pointer"><input type="checkbox" data-pick="'+r.id+'"'+(basket.includes(r.id)?' checked':'')+'> '+esc(r.titel)+'</label>'+
+  $("#pickLandSel").innerHTML = '<option value="alle">Alle lande</option>'+Object.keys(LANDE).map(k=>'<option value="'+k+'"'+(pickLand===k?' selected':'')+'>'+LANDE[k]+'</option>').join('');
+  $("#pickHovedSel").innerHTML = '<option value="alle">Alle hovedingredienser</option>'+Object.keys(HOVEDING).map(k=>'<option value="'+k+'"'+(pickHoved===k?' selected':'')+'>'+HOVEDING[k]+'</option>').join('');
+  const vis = allRecipes().filter(r=>basket.includes(r.id) || filtreret([r], pickLand, pickHoved).length);
+  $("#picker").innerHTML = vis.map(r=>
+    '<div class="pick-item" style="border-left:3px solid '+LANDFARVE[landAf(r)]+';padding-left:9px"><label style="display:flex;align-items:center;gap:10px;flex:1;cursor:pointer"><input type="checkbox" data-pick="'+r.id+'"'+(basket.includes(r.id)?' checked':'')+'> '+esc(r.titel)+'</label>'+
     (basket.includes(r.id)?paxSelectHTML(r,'data-paxpick'):'')+
     '</div>'
   ).join("");
@@ -1123,6 +1189,8 @@ document.addEventListener("change", e=>{
   if(pm){ setPax(pm.dataset.paxModal, +pm.value); openModal(pm.dataset.paxModal); renderGrid(); renderPicker(); renderList(); return; }
   const pp = e.target.closest("[data-paxpick]");
   if(pp){ setPax(pp.dataset.paxpick, +pp.value); renderGrid(); renderList(); return; }
+  if(e.target.id === "pickLandSel"){ pickLand = e.target.value; renderPicker(); return; }
+  if(e.target.id === "pickHovedSel"){ pickHoved = e.target.value; renderPicker(); return; }
   const pg = e.target.closest("[data-paxgen]");
   if(pg){ setPax(pg.dataset.paxgen, +pg.value); visGen(); return; }
   const p = e.target.closest("[data-pick]");
@@ -1178,6 +1246,92 @@ function renderList(){
     }).join("")+'</div>'
   ).join("");
 }
+function hentJsPDF(){
+  if(window.jspdf && window.jspdf.jsPDF) return Promise.resolve(window.jspdf.jsPDF);
+  return new Promise((res, rej)=>{
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    sc.onload = ()=>res(window.jspdf.jsPDF);
+    sc.onerror = rej;
+    document.head.appendChild(sc);
+  });
+}
+function lavPdf(jsPDF, g, secs){
+  const doc = new jsPDF({unit:'mm', format:'a4'});
+  const W = 210, M = 18, R = W - M;
+  const INK = [26,23,16], BRASS = [138,106,42], MUT = [120,113,98], LINJE = [205,198,182];
+  let y = 22;
+  const sideskift = behov => { if(y + behov > 279){ doc.addPage(); y = 20; } };
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(19); doc.setTextColor(...INK);
+  doc.text('INDKØBSLISTE', M, y);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...BRASS);
+  doc.text('NETTO-RUTEN', M, y+6.5);
+  const dato = new Date().toLocaleDateString('da-DK', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  doc.setTextColor(...MUT);
+  doc.text(dato.charAt(0).toUpperCase()+dato.slice(1), R, y, {align:'right'});
+  y += 12;
+
+  const retter = basket.map(id=>{ const r = byId(id); if(!r) return null;
+    const p = getPax(r); return r.titel + (p !== r.pers ? ' ('+p+' pers)' : ' ('+p+' pers)'); }).filter(Boolean);
+  doc.setFontSize(9); doc.setTextColor(...MUT);
+  const retlinjer = doc.splitTextToSize('Retter: ' + retter.join('  ·  '), R - M);
+  doc.text(retlinjer, M, y);
+  y += retlinjer.length * 4.2 + 3;
+  doc.setDrawColor(...LINJE); doc.setLineWidth(0.4);
+  doc.line(M, y, R, y); y += 8;
+
+  secs.forEach((sek, ix)=>{
+    sideskift(16);
+    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...BRASS);
+    doc.text('STOP '+(ix+1)+'  ·  '+sek.toUpperCase(), M, y);
+    doc.setDrawColor(...LINJE); doc.setLineWidth(0.3);
+    doc.line(M, y+2, R, y+2);
+    y += 8;
+    g[sek].forEach(it=>{
+      const navnTekst = it.navn + (it.dele.length ? '  —  ' + it.dele.join(' + ') : '');
+      const linjer = doc.splitTextToSize(navnTekst, 118);
+      const hoejde = Math.max(linjer.length * 4.6, 6.5);
+      sideskift(hoejde + 2);
+      doc.setDrawColor(...INK); doc.setLineWidth(0.35);
+      doc.rect(M, y - 3.2, 3.6, 3.6);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10.5); doc.setTextColor(...INK);
+      doc.text(linjer, M + 6.5, y);
+      doc.setFontSize(7.5); doc.setTextColor(...MUT);
+      const fraLinjer = doc.splitTextToSize(it.fra.join(', '), 52);
+      doc.text(fraLinjer, R, y, {align:'right'});
+      y += Math.max(hoejde, fraLinjer.length * 3.4) + 2.4;
+    });
+    y += 4;
+  });
+
+  sideskift(12);
+  doc.setDrawColor(...LINJE); doc.line(M, y, R, y);
+  doc.setFontSize(8); doc.setTextColor(...MUT);
+  doc.text('FRIISNÆS KØKKEN  ·  BYGGET MED AI', M, y+6);
+  return doc;
+}
+$("#pdfBtn").addEventListener("click", async ()=>{
+  const g = buildList();
+  const secs = NETTO_RUTE.filter(sek=>g[sek]);
+  if(!secs.length){ toast("Listen er tom"); return; }
+  let JS;
+  try { JS = await hentJsPDF(); }
+  catch(e){ toast("Kunne ikke hente PDF-værktøjet — tjek din forbindelse"); return; }
+  const doc = lavPdf(JS, g, secs);
+  const navn = 'indkoebsliste-netto-' + new Date().toISOString().slice(0,10) + '.pdf';
+  try {
+    const blob = doc.output('blob');
+    const fil = new File([blob], navn, {type:'application/pdf'});
+    if(navigator.canShare && navigator.canShare({files:[fil]})){
+      await navigator.share({files:[fil], title:'Indkøbsliste — Netto-ruten'});
+      toast("Listen er delt");
+      return;
+    }
+  } catch(e){ if(e && e.name === 'AbortError'){ return; } }
+  doc.save(navn);
+  toast("PDF hentet");
+});
 $("#copyBtn").addEventListener("click", ()=>{
   const g = buildList();
   const secs = NETTO_RUTE.filter(s=>g[s]);
@@ -1258,8 +1412,9 @@ function generer(){
   ing.push({navn:"salt og peber", maengde:"", sektion:"Krydderier & sauce"});
   const trin = [b.tilbered, p.tilbered, g.tilbered, s.tilbered,
     "Anret "+p.ord+" med "+b.ord+" og det grønne, og servér med det samme."];
+  const hovedGen = p.navn.includes("kylling") ? "kylling" : (p.navn.includes("oksek\u00f8d")||p.navn.includes("kalve")) ? "oksek\u00f8d" : (p.navn.includes("lakse")||p.navn.includes("rejer")||p.navn.includes("torsk")) ? "fisk" : p.navn.includes("\u00e6g") ? "vegetar" : "andet";
   sidsteGen = {
-    id:"gen-"+Date.now(),
+    id:"gen-"+Date.now(), land:"andet", hoved:hovedGen,
     titel, intro:pick(GEN.intro),
     min, pers:1, kcal,
     img:null, genereret:true,
