@@ -131,8 +131,23 @@ select:focus-visible{outline:2px solid var(--brass)}
 .forslag-out{margin-top:26px;display:none}
 .forslag-out.open{display:block;animation:pop .3s ease}
 .grandprix{display:flex;flex-direction:column;align-items:center}
-.gp-scene{width:min(360px,86vw);height:min(360px,86vw)}
-.gp-scene svg{width:100%;height:100%;display:block}
+.gp3d-scene{perspective:1150px;height:360px;width:100%;position:relative;overflow:hidden}
+.gp3d-tilt{position:absolute;inset:0;transform:rotateX(-5deg);transform-style:preserve-3d}
+.gp3d-ring{position:absolute;inset:0;transform-style:preserve-3d;will-change:transform}
+.gp3d-kort{position:absolute;left:50%;top:50%;width:172px;height:240px;margin:-120px 0 0 -86px;
+  background:linear-gradient(160deg,#1a1712,#14120e);border:1.5px solid var(--line);border-radius:14px;
+  padding:16px 14px;display:flex;flex-direction:column;justify-content:space-between;text-align:center;
+  box-shadow:0 14px 34px rgba(0,0,0,.55)}
+.gp3d-kort .plads{font-family:var(--mono);font-size:9px;letter-spacing:.3em;color:var(--muted)}
+.gp3d-kort h5{font-family:var(--disp);font-weight:400;font-size:19px;letter-spacing:.03em;line-height:1.25;color:var(--bone);margin:0}
+.gp3d-kort .bund{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--brass)}
+.gp3d-vinder{box-shadow:0 0 0 2px var(--brass-bright),0 0 38px rgba(232,205,143,.35),0 14px 34px rgba(0,0,0,.55)}
+.gp3d-scene::after{content:"";position:absolute;inset:auto 0 0 0;height:70px;background:linear-gradient(transparent,var(--ink));pointer-events:none}
+@media(max-width:640px){
+  .gp3d-scene{height:280px;perspective:900px}
+  .gp3d-kort{width:132px;height:190px;margin:-95px 0 0 -66px;padding:12px 10px}
+  .gp3d-kort h5{font-size:15px}
+}
 .gp-status{margin-top:14px;font-family:var(--mono);font-size:12px;letter-spacing:.12em;color:var(--brass-bright);text-align:center;min-height:18px}
 @keyframes lysblink{0%,100%{opacity:1}50%{opacity:.25}}
 .lys1{animation:lysblink 1.1s ease-in-out infinite}
@@ -1507,72 +1522,54 @@ function ding(gange){
     }
   }catch(e){}
 }
+let gp3dR = 0, gp3dStep = 0;
+function delUd(){
+  const alle = allRecipes().slice();
+  const N = Math.min(14, alle.length), valgte = [];
+  for(let i=0;i<N;i++) valgte.push(alle.splice(Math.floor(Math.random()*alle.length), 1)[0]);
+  return valgte;
+}
 function tegnSpillehal(){
-  const liste = gpListe, N = liste.length, a = 360/N, c = 120;
-  const r1 = 80, r2 = 108;                 /* pladserne (den ydre bane) */
-  const pol = (rad, deg)=>{ const v = (deg-90)*Math.PI/180; return [c+rad*Math.cos(v), c+rad*Math.sin(v)]; };
-  let seg = '';
-  for(let i=0;i<N;i++){
-    const [x0,y0] = pol(r2, i*a), [x1,y1] = pol(r2, (i+1)*a);
-    const [x2,y2] = pol(r1, (i+1)*a), [x3,y3] = pol(r1, i*a);
-    seg += '<path class="gp-seg" data-i="'+i+'" d="M'+x0.toFixed(2)+' '+y0.toFixed(2)+' A'+r2+' '+r2+' 0 0 1 '+x1.toFixed(2)+' '+y1.toFixed(2)+
-      ' L'+x2.toFixed(2)+' '+y2.toFixed(2)+' A'+r1+' '+r1+' 0 0 0 '+x3.toFixed(2)+' '+y3.toFixed(2)+
-      ' Z" fill="'+LANDFARVE[landAf(liste[i])]+'" stroke="#0c0b09" stroke-width="0.7"/>';
-  }
-  let lys = '';
-  for(let i=0;i<28;i++){
-    const [x,y] = pol(114, i*(360/28));
-    lys += '<circle class="'+(i%2?'lys1':'lys2')+'" cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="1.8" fill="'+(i%2?'#e8cd8f':'#ede6d6')+'"/>';
-  }
-  const postbud =
-    '<g id="postbud" transform="rotate('+gpVinkel+' 120 120)">'+
-      '<g transform="translate(120,56) scale(1.35)">'+
-        '<circle cx="-6" cy="7" r="4.4" fill="none" stroke="#ede6d6" stroke-width="1.3"/>'+
-        '<circle cx="6.5" cy="7" r="4.4" fill="none" stroke="#ede6d6" stroke-width="1.3"/>'+
-        '<path d="M-6 7 L-1 1 L4 7 M-1 1 L1.5 1 M6.5 7 L3.5 0" fill="none" stroke="#c8a45d" stroke-width="1.3"/>'+
-        '<rect x="-9.5" y="0" width="5" height="4" rx="0.8" fill="#c8a45d"/>'+
-        '<path d="M1 6 L4 -3 L6.5 -1.5" fill="none" stroke="#b5432f" stroke-width="2.6" stroke-linecap="round"/>'+
-        '<circle cx="4.6" cy="-6.2" r="2.6" fill="#e8cd8f"/>'+
-        '<path d="M2.2 -7.6 L7 -7.6 L6 -9.4 L3.2 -9.4 Z" fill="#b5432f"/>'+
-      '</g>'+
-    '</g>';
-  return '<div class="grandprix"><div class="gp-scene"><svg viewBox="0 0 240 240" id="gpSvg">'+
-    '<circle cx="120" cy="120" r="118" fill="#14120e" stroke="#2a251c"/>'+
-    lys + seg +
-    '<circle cx="120" cy="120" r="64" fill="none" stroke="#2a251c" stroke-width="1" stroke-dasharray="3 4"/>'+
-    postbud +
-    '<text x="120" y="116" text-anchor="middle" font-family="Marcellus,serif" font-size="13" letter-spacing="3" fill="#c8a45d">GRAND PRIX</text>'+
-    '<text x="120" y="130" text-anchor="middle" font-family="Space Mono,monospace" font-size="5.5" letter-spacing="2" fill="#8a8272">FRIISN\u00c6S K\u00d8KKEN \u00b7 SPILLEHALLEN</text>'+
-    '</svg></div><div class="gp-status" id="gpStatus"></div></div>'+
+  const liste = gpListe, N = liste.length;
+  const mobil = window.innerWidth < 640;
+  const kortB = mobil ? 132 : 172;
+  gp3dStep = 360 / N;
+  gp3dR = Math.round((kortB/2 + 14) / Math.tan(Math.PI / N));
+  const kort = liste.map((r,i)=>{
+    const lf = LANDFARVE[landAf(r)];
+    return '<div class="gp3d-kort" data-i="'+i+'" style="border-color:'+lf+';transform:rotateY('+(i*gp3dStep)+'deg) translateZ('+gp3dR+'px)">'+
+      '<div class="plads">PLADS '+String(i+1).padStart(2,'0')+' / '+N+'</div>'+
+      '<h5>'+esc(r.titel)+'</h5>'+
+      '<div class="bund">'+r.min+' MIN \u00b7 '+r.kcal+' KCAL</div>'+
+    '</div>';
+  }).join('');
+  return '<div class="grandprix"><div class="gp3d-scene"><div class="gp3d-tilt">'+
+    '<div class="gp3d-ring" id="gpRing" style="transform:translateZ(-'+gp3dR+'px) rotateY(0deg)">'+kort+'</div>'+
+    '</div></div><div class="gp-status" id="gpStatus"></div></div>'+
     '<div class="dag-resultat" id="dagResultat"></div>';
 }
 $("#dagBtn").addEventListener("click", ()=>{
   if(gpSpinning) return;
   $("#ugeOut").classList.remove("open");
   const out = $("#dagOut");
-  gpListe = allRecipes();
-  if(!out.classList.contains("open") || !document.getElementById("gpSvg")){
-    out.innerHTML = tegnSpillehal();
-    out.classList.add("open");
-  }
-  document.querySelectorAll(".gp-seg").forEach(p=>p.classList.remove("gp-vinder"));
+  gpListe = delUd();                       /* nyt tilfaeldigt opdaek af 14 pladser hver gang */
+  out.innerHTML = tegnSpillehal();
+  out.classList.add("open");
   $("#dagResultat").innerHTML = "";
-  const N = gpListe.length, a = 360/N;
+  const N = gpListe.length;
   const vinder = Math.floor(Math.random()*N);
-  const maal = vinder*a + a/2;
-  const nu = ((gpVinkel % 360) + 360) % 360;
-  const total = 3*360 + ((((maal - nu) % 360) + 360) % 360);
-  const startV = gpVinkel, dur = 5200, t0 = performance.now();
+  const total = 3*360 + vinder*gp3dStep;   /* ringen drejer negativt, saa vinderen ender forrest */
+  const dur = 5200, t0 = performance.now();
+  const ring = document.getElementById("gpRing");
   gpSpinning = true;
   $("#gpStatus").textContent = "\uD83D\uDD14 Klokken lyder \u2014 postbudene cykler rundt \u2026";
   ding(2);
   const reduceret = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function saet(v){ if(ring) ring.style.transform = 'translateZ(-'+gp3dR+'px) rotateY('+(-v)+'deg)'; }
   function faerdig(){
-    gpVinkel = startV + total;
-    const bud = document.getElementById("postbud");
-    if(bud) bud.setAttribute("transform", "rotate("+gpVinkel+" 120 120)");
-    const segEl = document.querySelector('.gp-seg[data-i="'+vinder+'"]');
-    if(segEl) segEl.classList.add("gp-vinder");
+    saet(total);
+    const kortEl = document.querySelector('.gp3d-kort[data-i="'+vinder+'"]');
+    if(kortEl) kortEl.classList.add("gp3d-vinder");
     gpSpinning = false;
     ding(1);
     $("#gpStatus").textContent = "Postbuddet standsede ved din plads \u2014 du har vundet:";
@@ -1582,9 +1579,7 @@ $("#dagBtn").addEventListener("click", ()=>{
   function loop(t){
     const x = Math.min((t - t0)/dur, 1);
     const ease = 1 - Math.pow(1 - x, 3);
-    const v = startV + total*ease;
-    const bud = document.getElementById("postbud");
-    if(bud) bud.setAttribute("transform", "rotate("+v+" 120 120)");
+    saet(total*ease);
     if(x < 1) requestAnimationFrame(loop); else faerdig();
   }
   requestAnimationFrame(loop);
