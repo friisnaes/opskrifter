@@ -130,10 +130,15 @@ select:focus-visible{outline:2px solid var(--brass)}
 .btn.big{font-size:13px;padding:16px 28px;letter-spacing:.14em}
 .forslag-out{margin-top:26px;display:none}
 .forslag-out.open{display:block;animation:pop .3s ease}
-.hjul-wrap{display:flex;flex-direction:column;align-items:center;gap:0}
-.hjul-pil{width:0;height:0;border-left:13px solid transparent;border-right:13px solid transparent;border-top:20px solid var(--brass-bright);z-index:2;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
-.hjul{width:min(320px,78vw);height:min(320px,78vw);margin-top:-4px}
-.hjul svg{width:100%;height:100%;display:block;transition:transform 4s cubic-bezier(.12,.82,.16,1)}
+.grandprix{display:flex;flex-direction:column;align-items:center}
+.gp-scene{width:min(360px,86vw);height:min(360px,86vw)}
+.gp-scene svg{width:100%;height:100%;display:block}
+.gp-status{margin-top:14px;font-family:var(--mono);font-size:12px;letter-spacing:.12em;color:var(--brass-bright);text-align:center;min-height:18px}
+@keyframes lysblink{0%,100%{opacity:1}50%{opacity:.25}}
+.lys1{animation:lysblink 1.1s ease-in-out infinite}
+.lys2{animation:lysblink 1.1s ease-in-out infinite .55s}
+.gp-vinder{stroke:#e8cd8f !important;stroke-width:2.4 !important;filter:brightness(1.35)}
+@media (prefers-reduced-motion:reduce){.lys1,.lys2{animation:none}}
 .mini-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;max-width:1000px;margin:0 auto}
 .mini-card{background:var(--panel);border:1.5px solid var(--line);border-radius:var(--radius);padding:18px 20px;display:flex;flex-direction:column;gap:9px}
 .mini-card h3{font-family:var(--disp);font-weight:400;font-size:19px;letter-spacing:.03em;line-height:1.25}
@@ -1477,21 +1482,8 @@ function visGen(){
   });
   $("#reroll").addEventListener("click", generer);
 }
-/* ============ dagens forslag: roulettehjul ============ */
-let hjulRotation = 0, hjulListe = [], hjulSpinning = false;
-function tegnHjul(){
-  const liste = hjulListe;
-  const N = liste.length, a = 360/N, r = 100, cx = 105, cy = 105;
-  let paths = '';
-  for(let i=0;i<N;i++){
-    const a0 = (i*a - 90) * Math.PI/180, a1 = ((i+1)*a - 90) * Math.PI/180;
-    const x0 = cx + r*Math.cos(a0), y0 = cy + r*Math.sin(a0);
-    const x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
-    paths += '<path d="M'+cx+' '+cy+' L'+x0.toFixed(2)+' '+y0.toFixed(2)+' A'+r+' '+r+' 0 0 1 '+x1.toFixed(2)+' '+y1.toFixed(2)+' Z" fill="'+LANDFARVE[landAf(liste[i])]+'" stroke="#0c0b09" stroke-width="0.6"/>';
-  }
-  return '<div class="hjul-wrap"><div class="hjul-pil"></div><div class="hjul"><svg viewBox="0 0 210 210" id="hjulSvg" style="transform:rotate('+hjulRotation+'deg)">'+paths+
-    '<circle cx="'+cx+'" cy="'+cy+'" r="18" fill="#14120e" stroke="#c8a45d" stroke-width="1.5"/></svg></div></div><div class="dag-resultat" id="dagResultat"></div>';
-}
+/* ============ dagens forslag: Grand Prix-spillehallen ============ */
+let gpVinkel = 0, gpSpinning = false, gpListe = [];
 function miniCardHTML(r){
   const lf = LANDFARVE[landAf(r)];
   return '<div class="mini-card" style="border-color:'+lf+'">'+
@@ -1501,27 +1493,101 @@ function miniCardHTML(r){
     '<div class="card-actions"><button class="btn" data-open="'+r.id+'">Se opskriften</button>'+
     '<button class="btn small" data-vaelg="'+r.id+'">Vælg denne</button></div></div>';
 }
+function ding(gange){
+  try{
+    const ctx = ding._ctx || (ding._ctx = new (window.AudioContext||window.webkitAudioContext)());
+    for(let i=0;i<gange;i++){
+      const t = ctx.currentTime + i*0.28;
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.value = 1318; o.type = "sine";
+      g.gain.setValueAtTime(0.12, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t+0.5);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t); o.stop(t+0.55);
+    }
+  }catch(e){}
+}
+function tegnSpillehal(){
+  const liste = gpListe, N = liste.length, a = 360/N, c = 120;
+  const r1 = 80, r2 = 108;                 /* pladserne (den ydre bane) */
+  const pol = (rad, deg)=>{ const v = (deg-90)*Math.PI/180; return [c+rad*Math.cos(v), c+rad*Math.sin(v)]; };
+  let seg = '';
+  for(let i=0;i<N;i++){
+    const [x0,y0] = pol(r2, i*a), [x1,y1] = pol(r2, (i+1)*a);
+    const [x2,y2] = pol(r1, (i+1)*a), [x3,y3] = pol(r1, i*a);
+    seg += '<path class="gp-seg" data-i="'+i+'" d="M'+x0.toFixed(2)+' '+y0.toFixed(2)+' A'+r2+' '+r2+' 0 0 1 '+x1.toFixed(2)+' '+y1.toFixed(2)+
+      ' L'+x2.toFixed(2)+' '+y2.toFixed(2)+' A'+r1+' '+r1+' 0 0 0 '+x3.toFixed(2)+' '+y3.toFixed(2)+
+      ' Z" fill="'+LANDFARVE[landAf(liste[i])]+'" stroke="#0c0b09" stroke-width="0.7"/>';
+  }
+  let lys = '';
+  for(let i=0;i<28;i++){
+    const [x,y] = pol(114, i*(360/28));
+    lys += '<circle class="'+(i%2?'lys1':'lys2')+'" cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="1.8" fill="'+(i%2?'#e8cd8f':'#ede6d6')+'"/>';
+  }
+  const postbud =
+    '<g id="postbud" transform="rotate('+gpVinkel+' 120 120)">'+
+      '<g transform="translate(120,56) scale(1.35)">'+
+        '<circle cx="-6" cy="7" r="4.4" fill="none" stroke="#ede6d6" stroke-width="1.3"/>'+
+        '<circle cx="6.5" cy="7" r="4.4" fill="none" stroke="#ede6d6" stroke-width="1.3"/>'+
+        '<path d="M-6 7 L-1 1 L4 7 M-1 1 L1.5 1 M6.5 7 L3.5 0" fill="none" stroke="#c8a45d" stroke-width="1.3"/>'+
+        '<rect x="-9.5" y="0" width="5" height="4" rx="0.8" fill="#c8a45d"/>'+
+        '<path d="M1 6 L4 -3 L6.5 -1.5" fill="none" stroke="#b5432f" stroke-width="2.6" stroke-linecap="round"/>'+
+        '<circle cx="4.6" cy="-6.2" r="2.6" fill="#e8cd8f"/>'+
+        '<path d="M2.2 -7.6 L7 -7.6 L6 -9.4 L3.2 -9.4 Z" fill="#b5432f"/>'+
+      '</g>'+
+    '</g>';
+  return '<div class="grandprix"><div class="gp-scene"><svg viewBox="0 0 240 240" id="gpSvg">'+
+    '<circle cx="120" cy="120" r="118" fill="#14120e" stroke="#2a251c"/>'+
+    lys + seg +
+    '<circle cx="120" cy="120" r="64" fill="none" stroke="#2a251c" stroke-width="1" stroke-dasharray="3 4"/>'+
+    postbud +
+    '<text x="120" y="116" text-anchor="middle" font-family="Marcellus,serif" font-size="13" letter-spacing="3" fill="#c8a45d">GRAND PRIX</text>'+
+    '<text x="120" y="130" text-anchor="middle" font-family="Space Mono,monospace" font-size="5.5" letter-spacing="2" fill="#8a8272">FRIISN\u00c6S K\u00d8KKEN \u00b7 SPILLEHALLEN</text>'+
+    '</svg></div><div class="gp-status" id="gpStatus"></div></div>'+
+    '<div class="dag-resultat" id="dagResultat"></div>';
+}
 $("#dagBtn").addEventListener("click", ()=>{
-  if(hjulSpinning) return;
+  if(gpSpinning) return;
   $("#ugeOut").classList.remove("open");
   const out = $("#dagOut");
-  hjulListe = allRecipes();
-  if(!out.classList.contains("open") || !document.getElementById("hjulSvg")){
-    out.innerHTML = tegnHjul();
+  gpListe = allRecipes();
+  if(!out.classList.contains("open") || !document.getElementById("gpSvg")){
+    out.innerHTML = tegnSpillehal();
     out.classList.add("open");
   }
+  document.querySelectorAll(".gp-seg").forEach(p=>p.classList.remove("gp-vinder"));
   $("#dagResultat").innerHTML = "";
-  const N = hjulListe.length, a = 360/N;
+  const N = gpListe.length, a = 360/N;
   const vinder = Math.floor(Math.random()*N);
-  const mål = -(vinder*a + a/2);
-  const nu = ((hjulRotation % 360) + 360) % 360;
-  hjulRotation += 4*360 + ((((mål - nu) % 360) + 360) % 360);
-  hjulSpinning = true;
-  requestAnimationFrame(()=>{ const svg = document.getElementById("hjulSvg"); if(svg) svg.style.transform = 'rotate('+hjulRotation+'deg)'; });
-  setTimeout(()=>{
-    hjulSpinning = false;
-    $("#dagResultat").innerHTML = miniCardHTML(hjulListe[vinder]);
-  }, 4200);
+  const maal = vinder*a + a/2;
+  const nu = ((gpVinkel % 360) + 360) % 360;
+  const total = 3*360 + ((((maal - nu) % 360) + 360) % 360);
+  const startV = gpVinkel, dur = 5200, t0 = performance.now();
+  gpSpinning = true;
+  $("#gpStatus").textContent = "\uD83D\uDD14 Klokken lyder \u2014 postbudene cykler rundt \u2026";
+  ding(2);
+  const reduceret = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function faerdig(){
+    gpVinkel = startV + total;
+    const bud = document.getElementById("postbud");
+    if(bud) bud.setAttribute("transform", "rotate("+gpVinkel+" 120 120)");
+    const segEl = document.querySelector('.gp-seg[data-i="'+vinder+'"]');
+    if(segEl) segEl.classList.add("gp-vinder");
+    gpSpinning = false;
+    ding(1);
+    $("#gpStatus").textContent = "Postbuddet standsede ved din plads \u2014 du har vundet:";
+    $("#dagResultat").innerHTML = miniCardHTML(gpListe[vinder]);
+  }
+  if(reduceret){ faerdig(); return; }
+  function loop(t){
+    const x = Math.min((t - t0)/dur, 1);
+    const ease = 1 - Math.pow(1 - x, 3);
+    const v = startV + total*ease;
+    const bud = document.getElementById("postbud");
+    if(bud) bud.setAttribute("transform", "rotate("+v+" 120 120)");
+    if(x < 1) requestAnimationFrame(loop); else faerdig();
+  }
+  requestAnimationFrame(loop);
 });
 
 /* ============ forslag til ugen: 4 retter, 4 temaer, faelles raavarer ============ */
